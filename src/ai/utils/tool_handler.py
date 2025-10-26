@@ -39,7 +39,7 @@ class ToolRegistry:
     
     def get_all_schemas(self) -> list[dict]:
         """Get all tool schemas for LLM."""
-        return list(self._tools.values())
+        return [{"type": "function", "function": schema} for schema in self._tools.values()]
     
     def has_tool(self, name: str) -> bool:
         """Check if tool exists in registry."""
@@ -105,17 +105,19 @@ class ToolHandler:
         logger.debug(f"Parallel execution completed: {len(sorted_results)} results", extra={"success_count": sum(1 for r in sorted_results if r.success)})
         return sorted_results
     
-    def build_tool_response_message(self, results: list[ToolResult]) -> dict:
-        """Build the tool response message to append to conversation."""
-        logger.debug(f"Building response message for {len(results)} tool results")
-        return {
-            "role": "user",
-            "content": [
-                {
-                    "type": "tool",
-                    "tool_use_id": result.call_id,
-                    "content": result.content
-                }
-                for result in results
-            ]
-        }
+    def build_tool_response_messages(self, results: list[ToolResult]) -> list[dict]:
+        """Build tool response messages to append to conversation.
+        
+        Azure OpenAI requires separate messages for each tool result with role='tool'.
+        Returns a list of messages to append to the conversation.
+        """
+        logger.debug(f"Building response messages for {len(results)} tool results")
+        return [
+            {
+                "role": "tool",
+                "tool_call_id": result.call_id,
+                "name": result.name,
+                "content": result.content
+            }
+            for result in results
+        ]

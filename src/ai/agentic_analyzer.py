@@ -11,23 +11,19 @@ from .utils.tool_handler import ToolHandler, ToolRegistry
 
 
 AGENTIC_SYSTEM_PROMPT = (
-    "You are an agentic product intelligence assistant. Your task is to extract structured "
-    "product data and generate insights from web pages to populate a ProductSnapshot schema.\n\n"
-    "You have access to a fetch_page_text tool that allows you to retrieve and extract text "
-    "from any URL. The tool returns visible text content along with all links found on the page. "
-    "Use this tool strategically to gather information needed to complete the product snapshot.\n\n"
-    "Guidelines:\n"
-    "- Always populate the ProductSnapshot schema exactly using evidence from retrieved content\n"
-    "- Write in a neutral, professional tone\n"
-    "- Keep numeric values as numbers\n"
-    "- Ensure every URL is an https link\n"
-    "- If information is unavailable, return nulls or empty lists as appropriate\n"
-    "- Do not fabricate information - only use verified details from the pages you fetch\n"
-    "- Be strategic about which URLs to fetch; prioritize pages that will give you the most relevant information\n"
-    "- Pages may have many links - use them judiciously, not fetching everything\n"
-    "- Focus on key pages like Pricing, About, Products, Contact, Leadership, Company Info, etc.\n"
-    "- Avoid fetching every link - only follow links that seem relevant to gathering product/company information\n"
-    "- You may call the fetch_page_text tool multiple times if needed to gather comprehensive information"
+    "You are a product intelligence extractor. Extract structured product data from web pages to populate a ProductSnapshot.\n\n"
+    "INSTRUCTIONS:\n"
+    "1. Use fetch_page_text tool strategically to gather information from multiple relevant pages.\n"
+    "2. Prioritize pages: homepage, about, features, pricing, contact, security/compliance.\n"
+    "3. For optional fields: always attempt to find them. Only omit if absolutely unavailable from the sources.\n"
+    "4. Never fabricate data - only use verified information from fetched content.\n"
+    "5. Write in neutral, professional, third-person tone.\n"
+    "6. Keep numeric values as numbers (e.g., 2023, 4.5).\n"
+    "7. All URLs must begin with https:// and be copy-paste ready.\n"
+    "8. For pricing: CRITICAL - Always fetch the dedicated pricing page (e.g., /pricing, /plans, /pricing-plans). Extract all available plans with plan name, amount, currency, period, and included features. Include free tiers and trials.\n"
+    "9. For reviews: search G2, Capterra, GetApp, and SoftwareAdvice if accessible.\n"
+    "10. Return empty lists/nulls only when information truly cannot be found after thorough search.\n\n"
+    "OUTPUT: Valid JSON matching the ProductSnapshot schema exactly."
 )
 
 
@@ -52,6 +48,10 @@ def extract_product_snapshot_agentic(
     logger.debug(f"Registered {len(tools)} tool(s)")
     
     messages = [
+        {
+            "role": "system",
+            "content": AGENTIC_SYSTEM_PROMPT
+        },
         {
             "role": "user",
             "content": (
@@ -84,7 +84,7 @@ def extract_product_snapshot_agentic(
             
             messages.append({
                 "role": "assistant",
-                "content": "",
+                "content": None,
                 "tool_calls": [
                     {
                         "id": tc.id,
@@ -99,7 +99,8 @@ def extract_product_snapshot_agentic(
             })
             
             tool_results = tool_handler.execute_parallel(tool_calls)
-            messages.append(tool_handler.build_tool_response_message(tool_results))
+            tool_response_messages = tool_handler.build_tool_response_messages(tool_results)
+            messages.extend(tool_response_messages)
         else:
             logger.debug("LLM produced final response (no tool calls)")
             parsed = response.choices[0].message.parsed

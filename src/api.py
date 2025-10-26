@@ -1,8 +1,10 @@
 """FastAPI application for product scraping and analysis."""
 from __future__ import annotations
 
+import time
 from pydantic import BaseModel, Field
-from fastapi import FastAPI, HTTPException
+from fastapi import FastAPI, HTTPException, Request
+from loguru import logger
 
 from .main import scrape_and_analyze
 from .schemas.product import ProductSnapshot
@@ -12,6 +14,16 @@ app = FastAPI(
     description="API for scraping and analyzing product information from URLs",
     version="1.0.0",
 )
+
+
+@app.middleware("http")
+async def log_requests(request: Request, call_next):
+    """Log incoming requests with response time and status code."""
+    start_time = time.time()
+    response = await call_next(request)
+    duration = time.time() - start_time
+    logger.info(f"{request.method} {request.url.path} - {response.status_code} - {duration:.2f}s")
+    return response
 
 
 class ScrapeRequest(BaseModel):
@@ -40,6 +52,7 @@ async def scrape_product(request: ScrapeRequest) -> ScrapeResponse:
             error=None
         )
     except Exception as e:
+        logger.error(f"Scrape failed: {str(e)}", exc_info=True)
         raise HTTPException(
             status_code=500,
             detail=f"Failed to scrape and analyze product: {str(e)}"

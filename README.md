@@ -55,6 +55,12 @@ Request body:
 }
 ```
 
+```
+curl -X POST http://localhost:8000/scrape \
+  -H "Content-Type: application/json" \
+  -d '{"source_url": "https://www.leadspace.com/"}'
+```
+
 Response:
 ```json
 {
