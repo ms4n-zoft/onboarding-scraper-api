@@ -155,19 +155,19 @@
             }
         }
 
-        .event-item.progress {
+        .event-item.start {
             background: #e3f2fd;
             border-left: 4px solid #2196f3;
         }
 
-        .event-item.tool-call {
+        .event-item.reading {
             background: #fff3e0;
             border-left: 4px solid #ff9800;
         }
 
-        .event-item.tool-result {
-            background: #e8f5e9;
-            border-left: 4px solid #4caf50;
+        .event-item.update {
+            background: #f3e5f5;
+            border-left: 4px solid #9c27b0;
         }
 
         .event-item.complete {
@@ -296,29 +296,13 @@
             const eventsList = document.getElementById('eventsList');
             const eventItem = document.createElement('div');
 
-            let eventClass = 'progress';
+            let eventClass = event.event || 'update';
             let message = event.message || 'Processing...';
             let additionalContent = '';
 
-            switch(event.event) {
-                case 'tool_call':
-                    eventClass = 'tool-call';
-                    if (event.url) {
-                        additionalContent = `<div class="event-url">${event.url}</div>`;
-                    }
-                    break;
-                case 'tool_result':
-                    eventClass = 'tool-result';
-                    break;
-                case 'progress':
-                    eventClass = 'progress';
-                    break;
-                case 'complete':
-                    eventClass = 'complete';
-                    break;
-                case 'error':
-                    eventClass = 'error';
-                    break;
+            // Add URL for reading events
+            if (event.event === 'reading' && event.url) {
+                additionalContent = `<div class="event-url">${event.url}</div>`;
             }
 
             eventItem.className = `event-item ${eventClass}`;

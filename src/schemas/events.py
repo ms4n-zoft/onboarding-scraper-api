@@ -7,34 +7,30 @@ from pydantic import BaseModel, Field
 
 class EventType(str, Enum):
     """Types of events sent via SSE."""
-    TOOL_CALL = "tool_call"
-    TOOL_RESULT = "tool_result"
-    PROGRESS = "progress"
+    START = "start"
+    READING = "reading"
+    UPDATE = "update"
     COMPLETE = "complete"
     ERROR = "error"
 
 
-class ToolCallEvent(BaseModel):
-    """Event sent when a tool is about to be called."""
-    event: EventType = Field(default=EventType.TOOL_CALL)
-    tool_name: str = Field(description="Name of the tool being called")
-    url: str | None = Field(default=None, description="URL being fetched (for fetch_page_text)")
-    message: str = Field(description="Human-readable message for UI display")
+class StartEvent(BaseModel):
+    """Event sent when scraping starts."""
+    event: EventType = Field(default=EventType.START)
+    message: str = Field(description="Welcome message for the user")
 
 
-class ToolResultEvent(BaseModel):
-    """Event sent when a tool call completes."""
-    event: EventType = Field(default=EventType.TOOL_RESULT)
-    tool_name: str = Field(description="Name of the tool that completed")
-    success: bool = Field(description="Whether the tool call succeeded")
-    message: str = Field(description="Human-readable result message")
+class ReadingEvent(BaseModel):
+    """Event sent when reading a page."""
+    event: EventType = Field(default=EventType.READING)
+    url: str = Field(description="URL being read")
+    message: str = Field(description="Friendly message about reading the page")
 
 
-class ProgressEvent(BaseModel):
+class UpdateEvent(BaseModel):
     """Event for general progress updates."""
-    event: EventType = Field(default=EventType.PROGRESS)
+    event: EventType = Field(default=EventType.UPDATE)
     message: str = Field(description="Progress message")
-    iteration: int | None = Field(default=None, description="Current iteration number")
 
 
 class CompleteEvent(BaseModel):

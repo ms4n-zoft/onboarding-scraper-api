@@ -1,6 +1,7 @@
 """Agentic analyzer using function calling for product extraction."""
 from __future__ import annotations
 
+import json
 from typing import Callable, Any
 from openai import AzureOpenAI
 from loguru import logger
@@ -22,8 +23,7 @@ AGENTIC_SYSTEM_PROMPT = (
     "6. Keep numeric values as numbers (e.g., 2023, 4.5).\n"
     "7. All URLs must begin with https:// and be copy-paste ready.\n"
     "8. For pricing: CRITICAL - Always fetch the dedicated pricing page (e.g., /pricing, /plans, /pricing-plans). Extract all available plans with plan name, amount, currency, period, and included features. Include free tiers and trials.\n"
-    "9. For reviews: search G2, Capterra, GetApp, and SoftwareAdvice if accessible.\n"
-    "10. Return empty lists/nulls only when information truly cannot be found after thorough search.\n\n"
+    "9. Return empty lists/nulls only when information truly cannot be found after thorough search.\n\n"
     "OUTPUT: Valid JSON matching the ProductSnapshot schema exactly."
 )
 
@@ -49,7 +49,7 @@ def extract_product_snapshot_agentic(
 
     # Setup event emitter
     emitter = EventEmitter(event_callback)
-    emitter.emit_progress("Starting product extraction", iteration=0)
+    emitter.emit_start()
 
     # Setup tool registry and handler
     registry = ToolRegistry()
@@ -86,7 +86,6 @@ def extract_product_snapshot_agentic(
     while iteration < max_iterations:
         iteration += 1
         logger.debug(f"Agentic loop iteration {iteration}/{max_iterations}")
-        emitter.emit_progress(f"Analyzing (iteration {iteration})", iteration=iteration)
 
         response = client.beta.chat.completions.parse(
             model=deployment,
@@ -99,9 +98,16 @@ def extract_product_snapshot_agentic(
             tool_calls = response.choices[0].message.tool_calls
             logger.info(f"LLM called {len(tool_calls)} tool(s)")
 
-            # Emit tool call events
+            # Emit reading events for each page
             for tc in tool_calls:
-                emitter.emit_tool_call(tc.function.name, tc.function.arguments)
+                if tc.function.name == "fetch_page_text":
+                    try:
+                        args = json.loads(tc.function.arguments)
+                        url = args.get("url")
+                        if url:
+                            emitter.emit_reading(url)
+                    except Exception as e:
+                        logger.warning(f"Failed to parse tool arguments: {e}")
 
             messages.append({
                 "role": "assistant",
@@ -120,15 +126,11 @@ def extract_product_snapshot_agentic(
             })
 
             tool_results = tool_handler.execute_parallel(tool_calls)
-
-            # Emit tool result events
-            for result in tool_results:
-                success = not result.get("is_error", False)
-                tool_call_id = result.get("tool_call_id", "unknown")
-                emitter.emit_tool_result(tool_call_id, success)
-
             tool_response_messages = tool_handler.build_tool_response_messages(tool_results)
             messages.extend(tool_response_messages)
+
+            # Emit analyzing update after tools complete
+            emitter.emit_update("Analyzing...")
         else:
             logger.debug("LLM produced final response (no tool calls)")
             parsed = response.choices[0].message.parsed
