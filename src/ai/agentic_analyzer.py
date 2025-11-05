@@ -1,11 +1,12 @@
 """Agentic analyzer using function calling for product extraction."""
 from __future__ import annotations
 
-import json
+from typing import Callable, Any
 from openai import AzureOpenAI
 from loguru import logger
 
 from ..schemas.product import ProductSnapshot
+from ..utils.event_emitter import EventEmitter
 from .tools.fetcher import fetch_page_text, get_fetch_page_text_tool
 from .utils.tool_handler import ToolHandler, ToolRegistry
 
@@ -31,10 +32,25 @@ def extract_product_snapshot_agentic(
     client: AzureOpenAI,
     deployment: str,
     initial_url: str,
+    event_callback: Callable[[Any], None] | None = None,
 ) -> ProductSnapshot:
-    """Extract product data using agentic function calling."""
+    """Extract product data using agentic function calling.
+
+    Args:
+        client: Azure OpenAI client
+        deployment: Model deployment name
+        initial_url: URL to scrape
+        event_callback: Optional callback for streaming events (SSE)
+
+    Returns:
+        ProductSnapshot with extracted product data
+    """
     logger.info(f"Starting agentic extraction for URL: {initial_url}")
-    
+
+    # Setup event emitter
+    emitter = EventEmitter(event_callback)
+    emitter.emit_progress("Starting product extraction", iteration=0)
+
     # Setup tool registry and handler
     registry = ToolRegistry()
     registry.register(
@@ -70,18 +86,23 @@ def extract_product_snapshot_agentic(
     while iteration < max_iterations:
         iteration += 1
         logger.debug(f"Agentic loop iteration {iteration}/{max_iterations}")
-        
+        emitter.emit_progress(f"Analyzing (iteration {iteration})", iteration=iteration)
+
         response = client.beta.chat.completions.parse(
             model=deployment,
             messages=messages,
             tools=tools,
             response_format=ProductSnapshot,
         )
-        
+
         if response.choices[0].message.tool_calls:
             tool_calls = response.choices[0].message.tool_calls
             logger.info(f"LLM called {len(tool_calls)} tool(s)")
-            
+
+            # Emit tool call events
+            for tc in tool_calls:
+                emitter.emit_tool_call(tc.function.name, tc.function.arguments)
+
             messages.append({
                 "role": "assistant",
                 "content": None,
@@ -97,8 +118,15 @@ def extract_product_snapshot_agentic(
                     for tc in tool_calls
                 ]
             })
-            
+
             tool_results = tool_handler.execute_parallel(tool_calls)
+
+            # Emit tool result events
+            for result in tool_results:
+                success = not result.get("is_error", False)
+                tool_call_id = result.get("tool_call_id", "unknown")
+                emitter.emit_tool_result(tool_call_id, success)
+
             tool_response_messages = tool_handler.build_tool_response_messages(tool_results)
             messages.extend(tool_response_messages)
         else:

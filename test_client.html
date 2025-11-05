@@ -1,0 +1,442 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Product Scraper - Live Demo</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 900px;
+            margin: 0 auto;
+        }
+
+        .header {
+            text-align: center;
+            color: white;
+            margin-bottom: 30px;
+        }
+
+        .header h1 {
+            font-size: 2.5rem;
+            margin-bottom: 10px;
+        }
+
+        .header p {
+            font-size: 1.1rem;
+            opacity: 0.9;
+        }
+
+        .card {
+            background: white;
+            border-radius: 12px;
+            padding: 30px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
+            margin-bottom: 20px;
+        }
+
+        .input-group {
+            margin-bottom: 20px;
+        }
+
+        .input-group label {
+            display: block;
+            font-weight: 600;
+            margin-bottom: 8px;
+            color: #333;
+        }
+
+        .input-group input {
+            width: 100%;
+            padding: 12px 16px;
+            border: 2px solid #e0e0e0;
+            border-radius: 8px;
+            font-size: 1rem;
+            transition: border-color 0.3s;
+        }
+
+        .input-group input:focus {
+            outline: none;
+            border-color: #667eea;
+        }
+
+        .btn {
+            width: 100%;
+            padding: 14px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border: none;
+            border-radius: 8px;
+            font-size: 1rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: transform 0.2s, box-shadow 0.2s;
+        }
+
+        .btn:hover:not(:disabled) {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(102, 126, 234, 0.4);
+        }
+
+        .btn:disabled {
+            opacity: 0.6;
+            cursor: not-allowed;
+        }
+
+        .status-section {
+            display: none;
+        }
+
+        .status-section.active {
+            display: block;
+        }
+
+        .status-header {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            margin-bottom: 20px;
+        }
+
+        .spinner {
+            width: 24px;
+            height: 24px;
+            border: 3px solid #f3f3f3;
+            border-top: 3px solid #667eea;
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        .status-header h3 {
+            color: #333;
+            font-size: 1.2rem;
+        }
+
+        .events-list {
+            max-height: 400px;
+            overflow-y: auto;
+            background: #f8f9fa;
+            border-radius: 8px;
+            padding: 16px;
+        }
+
+        .event-item {
+            padding: 12px 16px;
+            margin-bottom: 10px;
+            border-radius: 6px;
+            animation: slideIn 0.3s ease-out;
+        }
+
+        @keyframes slideIn {
+            from {
+                opacity: 0;
+                transform: translateX(-20px);
+            }
+            to {
+                opacity: 1;
+                transform: translateX(0);
+            }
+        }
+
+        .event-item.progress {
+            background: #e3f2fd;
+            border-left: 4px solid #2196f3;
+        }
+
+        .event-item.tool-call {
+            background: #fff3e0;
+            border-left: 4px solid #ff9800;
+        }
+
+        .event-item.tool-result {
+            background: #e8f5e9;
+            border-left: 4px solid #4caf50;
+        }
+
+        .event-item.complete {
+            background: #e8f5e9;
+            border-left: 4px solid #4caf50;
+            font-weight: 600;
+        }
+
+        .event-item.error {
+            background: #ffebee;
+            border-left: 4px solid #f44336;
+        }
+
+        .event-time {
+            font-size: 0.75rem;
+            color: #666;
+            margin-bottom: 4px;
+        }
+
+        .event-message {
+            color: #333;
+            font-size: 0.95rem;
+        }
+
+        .event-url {
+            font-family: 'Courier New', monospace;
+            font-size: 0.85rem;
+            color: #667eea;
+            margin-top: 4px;
+            word-break: break-all;
+        }
+
+        .result-section {
+            display: none;
+            margin-top: 20px;
+        }
+
+        .result-section.active {
+            display: block;
+        }
+
+        .result-section h3 {
+            margin-bottom: 12px;
+            color: #333;
+        }
+
+        .result-content {
+            background: #f8f9fa;
+            border-radius: 8px;
+            padding: 16px;
+            max-height: 500px;
+            overflow-y: auto;
+        }
+
+        .result-content pre {
+            margin: 0;
+            white-space: pre-wrap;
+            word-wrap: break-word;
+            font-family: 'Courier New', monospace;
+            font-size: 0.9rem;
+            line-height: 1.5;
+        }
+
+        .error-message {
+            background: #ffebee;
+            color: #c62828;
+            padding: 16px;
+            border-radius: 8px;
+            border-left: 4px solid #f44336;
+            margin-top: 16px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>Product Scraper Engine</h1>
+            <p>Real-time product intelligence extraction with live updates</p>
+        </div>
+
+        <div class="card">
+            <div class="input-group">
+                <label for="urlInput">Product URL</label>
+                <input
+                    type="url"
+                    id="urlInput"
+                    placeholder="https://example.com/product"
+                    value="https://www.intercom.com"
+                >
+            </div>
+            <button class="btn" id="scrapeBtn" onclick="startScraping()">
+                Start Scraping
+            </button>
+        </div>
+
+        <div class="card status-section" id="statusSection">
+            <div class="status-header">
+                <div class="spinner"></div>
+                <h3>Scraping in progress...</h3>
+            </div>
+            <div class="events-list" id="eventsList"></div>
+        </div>
+
+        <div class="card result-section" id="resultSection">
+            <h3>Final Result</h3>
+            <div class="result-content">
+                <pre id="resultContent"></pre>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        let eventSource = null;
+
+        function formatTime() {
+            const now = new Date();
+            return now.toLocaleTimeString('en-US', {
+                hour12: false,
+                hour: '2-digit',
+                minute: '2-digit',
+                second: '2-digit'
+            });
+        }
+
+        function addEvent(event) {
+            const eventsList = document.getElementById('eventsList');
+            const eventItem = document.createElement('div');
+
+            let eventClass = 'progress';
+            let message = event.message || 'Processing...';
+            let additionalContent = '';
+
+            switch(event.event) {
+                case 'tool_call':
+                    eventClass = 'tool-call';
+                    if (event.url) {
+                        additionalContent = `<div class="event-url">${event.url}</div>`;
+                    }
+                    break;
+                case 'tool_result':
+                    eventClass = 'tool-result';
+                    break;
+                case 'progress':
+                    eventClass = 'progress';
+                    break;
+                case 'complete':
+                    eventClass = 'complete';
+                    break;
+                case 'error':
+                    eventClass = 'error';
+                    break;
+            }
+
+            eventItem.className = `event-item ${eventClass}`;
+            eventItem.innerHTML = `
+                <div class="event-time">${formatTime()}</div>
+                <div class="event-message">${message}</div>
+                ${additionalContent}
+            `;
+
+            eventsList.appendChild(eventItem);
+            eventsList.scrollTop = eventsList.scrollHeight;
+        }
+
+        function startScraping() {
+            const urlInput = document.getElementById('urlInput');
+            const scrapeBtn = document.getElementById('scrapeBtn');
+            const statusSection = document.getElementById('statusSection');
+            const resultSection = document.getElementById('resultSection');
+            const eventsList = document.getElementById('eventsList');
+            const resultContent = document.getElementById('resultContent');
+
+            const url = urlInput.value.trim();
+
+            if (!url) {
+                alert('Please enter a valid URL');
+                return;
+            }
+
+            // Reset UI
+            scrapeBtn.disabled = true;
+            scrapeBtn.textContent = 'Scraping...';
+            statusSection.classList.add('active');
+            resultSection.classList.remove('active');
+            eventsList.innerHTML = '';
+            resultContent.textContent = '';
+
+            // Close any existing connection
+            if (eventSource) {
+                eventSource.close();
+            }
+
+            // Start SSE connection
+            const apiUrl = `http://localhost:8000/scrape/stream`;
+
+            fetch(apiUrl, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({ source_url: url })
+            })
+            .then(response => {
+                const reader = response.body.getReader();
+                const decoder = new TextDecoder();
+
+                function readStream() {
+                    reader.read().then(({ done, value }) => {
+                        if (done) {
+                            scrapeBtn.disabled = false;
+                            scrapeBtn.textContent = 'Start Scraping';
+                            statusSection.classList.remove('active');
+                            return;
+                        }
+
+                        const chunk = decoder.decode(value, { stream: true });
+                        const lines = chunk.split('\n');
+
+                        lines.forEach(line => {
+                            if (line.startsWith('data: ')) {
+                                try {
+                                    const eventData = JSON.parse(line.substring(6));
+                                    addEvent(eventData);
+
+                                    // Handle completion event
+                                    if (eventData.event === 'complete') {
+                                        resultContent.textContent = JSON.stringify(eventData.data, null, 2);
+                                        resultSection.classList.add('active');
+                                        scrapeBtn.disabled = false;
+                                        scrapeBtn.textContent = 'Start Scraping';
+                                        statusSection.classList.remove('active');
+                                    }
+
+                                    // Handle error event
+                                    if (eventData.event === 'error') {
+                                        scrapeBtn.disabled = false;
+                                        scrapeBtn.textContent = 'Start Scraping';
+                                        statusSection.classList.remove('active');
+                                    }
+                                } catch (e) {
+                                    console.error('Failed to parse event:', e);
+                                }
+                            }
+                        });
+
+                        readStream();
+                    });
+                }
+
+                readStream();
+            })
+            .catch(error => {
+                console.error('Error:', error);
+                addEvent({
+                    event: 'error',
+                    message: `Connection error: ${error.message}`
+                });
+                scrapeBtn.disabled = false;
+                scrapeBtn.textContent = 'Start Scraping';
+                statusSection.classList.remove('active');
+            });
+        }
+
+        // Allow Enter key to submit
+        document.getElementById('urlInput').addEventListener('keypress', function(e) {
+            if (e.key === 'Enter') {
+                startScraping();
+            }
+        });
+    </script>
+</body>
+</html>

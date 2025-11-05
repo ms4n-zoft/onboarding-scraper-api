@@ -2,6 +2,7 @@
 from __future__ import annotations
 
 import argparse
+from typing import Callable, Any
 from loguru import logger
 
 from .config import load_azure_openai_client
@@ -9,17 +10,32 @@ from .ai.agentic_analyzer import extract_product_snapshot_agentic
 from .utils.logging import configure_logging
 
 
-def scrape_and_analyze(url: str, out_path: str | None = None) -> str:
-    """Analyze a product page using agentic function calling."""
+def scrape_and_analyze(
+    url: str,
+    out_path: str | None = None,
+    event_callback: Callable[[Any], None] | None = None,
+) -> str:
+    """Analyze a product page using agentic function calling.
+
+    Args:
+        url: Target URL to scrape
+        out_path: Optional path to write JSON output
+        event_callback: Optional callback for streaming events (SSE)
+
+    Returns:
+        JSON string of ProductSnapshot
+    """
     client, deployment = load_azure_openai_client()
-    result = extract_product_snapshot_agentic(client, deployment, url)
-    
+    result = extract_product_snapshot_agentic(
+        client, deployment, url, event_callback=event_callback
+    )
+
     payload = result.model_dump_json(indent=2, ensure_ascii=False)
-    
+
     if out_path:
         with open(out_path, "w", encoding="utf-8") as handle:
             handle.write(payload)
-    
+
     return payload
 
 
