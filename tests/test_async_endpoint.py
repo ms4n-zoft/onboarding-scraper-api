@@ -13,6 +13,7 @@ import json
 from fastapi.testclient import TestClient
 from src.api import app
 from src.config.redis import get_redis_connection
+from src.dependencies import get_queue
 from loguru import logger
 
 
@@ -87,8 +88,7 @@ def test_async_scrape_endpoint():
         
         # Test 6: Verify queue is properly configured
         logger.info("Test 6: Verifying queue configuration...")
-        from src.api import get_scrape_queue
-        queue = get_scrape_queue()
+        queue = get_queue()
         logger.info(f"✓ Queue name: {queue.name}")
         logger.info(f"✓ Queue connection: {queue.connection}\n")
         

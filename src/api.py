@@ -3,19 +3,21 @@ from __future__ import annotations
 
 import json
 import time
+import asyncio
 from typing import AsyncGenerator
-from pydantic import BaseModel, Field
+
 from fastapi import FastAPI, HTTPException, Request
 from fastapi.responses import StreamingResponse
 from fastapi.middleware.cors import CORSMiddleware
 from loguru import logger
+from rq.job import Job as RQJob
 
 from .main import scrape_and_analyze
 from .schemas.product import ProductSnapshot
 from .schemas.events import CompleteEvent, ErrorEvent
-from .config.redis import get_redis_connection
+from .schemas.api import ScrapeRequest, ScrapeResponse, AsyncScrapeResponse
+from .dependencies import get_queue, get_redis_client
 from .jobs.scraper_task import scrape_product_job
-from rq import Queue
 
 app = FastAPI(
     title="Product Scraper Engine",
@@ -41,40 +43,6 @@ async def log_requests(request: Request, call_next):
     duration = time.time() - start_time
     logger.info(f"{request.method} {request.url.path} - {response.status_code} - {duration:.2f}s")
     return response
-
-
-class ScrapeRequest(BaseModel):
-    source_url: str = Field(
-        ..., 
-        description="The URL of the product page to scrape",
-        example="https://example.com/product"
-    )
-
-
-class ScrapeResponse(BaseModel):
-    success: bool = Field(description="Whether the operation was successful")
-    data: ProductSnapshot = Field(description="Extracted product information")
-    error: str | None = Field(default=None, description="Error message if operation failed")
-
-
-class AsyncScrapeResponse(BaseModel):
-    """Response for async scrape job submission."""
-    job_id: str = Field(description="Unique job identifier for tracking")
-    status: str = Field(description="Initial job status (queued)")
-    stream_url: str = Field(description="SSE endpoint URL for this job")
-
-
-# Initialize RQ queue at module level (with lazy connection)
-_scrape_queue: Queue | None = None
-
-
-def get_scrape_queue() -> Queue:
-    """Get or initialize the RQ queue for scraping jobs."""
-    global _scrape_queue
-    if _scrape_queue is None:
-        redis_conn = get_redis_connection()
-        _scrape_queue = Queue("scraper", connection=redis_conn)
-    return _scrape_queue
 
 
 @app.post("/scrape", response_model=ScrapeResponse)
@@ -104,9 +72,9 @@ async def scrape_product_stream(request: ScrapeRequest) -> StreamingResponse:
     """
     async def event_generator() -> AsyncGenerator[str, None]:
         """Generate SSE events during scraping."""
-        events_buffer: list[BaseModel] = []
+        events_buffer: list = []
 
-        def event_callback(event: BaseModel) -> None:
+        def event_callback(event) -> None:
             """Buffer events from the scraper."""
             events_buffer.append(event)
 
@@ -197,7 +165,8 @@ async def scrape_product_async(request: ScrapeRequest) -> AsyncScrapeResponse:
         HTTPException: If job enqueuing fails
     """
     try:
-        queue = get_scrape_queue()
+        # Get queue from dependency (cached)
+        queue = get_queue()
         
         # Enqueue job with timeout of 600 seconds (10 minutes)
         job = queue.enqueue(
@@ -222,6 +191,121 @@ async def scrape_product_async(request: ScrapeRequest) -> AsyncScrapeResponse:
             status_code=500,
             detail=f"Failed to enqueue scraping job: {str(e)}"
         )
+
+
+@app.get("/jobs/{job_id}/stream")
+async def stream_job_events(job_id: str) -> StreamingResponse:
+    """Stream events for a job with reconnection support.
+    
+    Returns Server-Sent Events (SSE) with all past events replayed from Redis,
+    then continues streaming new events as they arrive.
+    
+    Args:
+        job_id: Unique job identifier
+        
+    Returns:
+        StreamingResponse with text/event-stream
+    """
+    async def event_generator() -> AsyncGenerator[str, None]:
+        """Generate SSE events from Redis and live updates."""
+        try:
+            redis_client = get_redis_client()
+            events_key = f"job:{job_id}:events"
+            
+            # Get all stored events from Redis
+            events_json_list = redis_client.lrange(events_key, 0, -1)
+            
+            if not events_json_list:
+                # Job might not exist or not started yet
+                yield f"data: {json.dumps({'event': 'waiting', 'message': 'Waiting for job to start...'})}\n\n"
+                await asyncio.sleep(1)
+                # Retry once
+                events_json_list = redis_client.lrange(events_key, 0, -1)
+            
+            # Stream all existing events with event IDs for reconnection
+            for idx, event_json in enumerate(events_json_list):
+                yield f"id: {idx}\n"
+                yield f"data: {event_json}\n\n"
+            
+            # Check job status
+            try:
+                rq_job = RQJob.fetch(job_id, connection=redis_client)
+            except Exception:
+                # Job not found in RQ (might be too old, invalid ID, or completed/expired)
+                # If we have events in Redis, stream them and close
+                if events_json_list:
+                    logger.debug(f"Job {job_id} not in RQ registry but has events in Redis (likely completed/expired)")
+                    return
+                else:
+                    logger.warning(f"Job {job_id} not found in RQ or Redis")
+                    return
+            
+            if rq_job.is_finished:
+                # Job completed, all events already sent
+                logger.info(f"Job {job_id} is finished, closing stream")
+                return
+            elif rq_job.is_failed:
+                # Send error event if not already in events
+                error_data = {
+                    "event": "error",
+                    "message": "Job failed",
+                    "error": str(rq_job.exc_info) if rq_job.exc_info else "Unknown error"
+                }
+                yield f"data: {json.dumps(error_data)}\n\n"
+                return
+            else:
+                # Job still running, poll for new events
+                last_position = len(events_json_list)
+                poll_count = 0
+                max_polls = 6000  # 10 minutes with 0.1s sleep
+                
+                while poll_count < max_polls:
+                    await asyncio.sleep(0.1)
+                    poll_count += 1
+                    
+                    # Get new events since last position
+                    new_events = redis_client.lrange(events_key, last_position, -1)
+                    
+                    if new_events:
+                        for idx, event_json in enumerate(new_events):
+                            event_id = last_position + idx
+                            yield f"id: {event_id}\n"
+                            yield f"data: {event_json}\n\n"
+                        
+                        last_position += len(new_events)
+                    
+                    # Check if job finished (only every 10 polls to reduce overhead)
+                    if poll_count % 10 == 0:
+                        rq_job.refresh()
+                        if rq_job.is_finished or rq_job.is_failed:
+                            logger.info(f"Job {job_id} completed during polling")
+                            break
+                
+                # Final check for any remaining events
+                final_events = redis_client.lrange(events_key, last_position, -1)
+                for idx, event_json in enumerate(final_events):
+                    event_id = last_position + idx
+                    yield f"id: {event_id}\n"
+                    yield f"data: {event_json}\n\n"
+        
+        except Exception as e:
+            logger.error(f"Error streaming job {job_id}: {str(e)}", exc_info=True)
+            error_data = {
+                "event": "error",
+                "message": "Stream error",
+                "error": str(e)
+            }
+            yield f"data: {json.dumps(error_data)}\n\n"
+    
+    return StreamingResponse(
+        event_generator(),
+        media_type="text/event-stream",
+        headers={
+            "Cache-Control": "no-cache",
+            "Connection": "keep-alive",
+            "X-Accel-Buffering": "no",
+        }
+    )
 
 
 if __name__ == "__main__":
