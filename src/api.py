@@ -13,6 +13,9 @@ from loguru import logger
 from .main import scrape_and_analyze
 from .schemas.product import ProductSnapshot
 from .schemas.events import CompleteEvent, ErrorEvent
+from .config.redis import get_redis_connection
+from .jobs.scraper_task import scrape_product_job
+from rq import Queue
 
 app = FastAPI(
     title="Product Scraper Engine",
@@ -52,6 +55,26 @@ class ScrapeResponse(BaseModel):
     success: bool = Field(description="Whether the operation was successful")
     data: ProductSnapshot = Field(description="Extracted product information")
     error: str | None = Field(default=None, description="Error message if operation failed")
+
+
+class AsyncScrapeResponse(BaseModel):
+    """Response for async scrape job submission."""
+    job_id: str = Field(description="Unique job identifier for tracking")
+    status: str = Field(description="Initial job status (queued)")
+    stream_url: str = Field(description="SSE endpoint URL for this job")
+
+
+# Initialize RQ queue at module level (with lazy connection)
+_scrape_queue: Queue | None = None
+
+
+def get_scrape_queue() -> Queue:
+    """Get or initialize the RQ queue for scraping jobs."""
+    global _scrape_queue
+    if _scrape_queue is None:
+        redis_conn = get_redis_connection()
+        _scrape_queue = Queue("scraper", connection=redis_conn)
+    return _scrape_queue
 
 
 @app.post("/scrape", response_model=ScrapeResponse)
@@ -155,6 +178,50 @@ async def scrape_product_stream(request: ScrapeRequest) -> StreamingResponse:
 @app.get("/health")
 async def health_check() -> dict:
     return {"status": "healthy", "service": "Product Scraper Engine"}
+
+
+@app.post("/scrape/async", response_model=AsyncScrapeResponse)
+async def scrape_product_async(request: ScrapeRequest) -> AsyncScrapeResponse:
+    """Submit a scraping job to the background queue.
+
+    Returns immediately with job_id for tracking.
+    The job will be processed by RQ workers and results stored in Redis.
+    
+    Args:
+        request: Scrape request with source_url
+        
+    Returns:
+        AsyncScrapeResponse with job_id and stream_url
+        
+    Raises:
+        HTTPException: If job enqueuing fails
+    """
+    try:
+        queue = get_scrape_queue()
+        
+        # Enqueue job with timeout of 600 seconds (10 minutes)
+        job = queue.enqueue(
+            scrape_product_job,
+            args=(request.source_url,),
+            job_timeout=600,  # 10 minutes
+            result_ttl=86400,  # Keep result for 24h
+            failure_ttl=86400,  # Keep failed job info for 24h
+        )
+
+        logger.info(f"✓ Enqueued job {job.id} for URL: {request.source_url}")
+
+        return AsyncScrapeResponse(
+            job_id=job.id,
+            status="queued",
+            stream_url=f"/jobs/{job.id}/stream"
+        )
+        
+    except Exception as e:
+        logger.error(f"❌ Failed to enqueue job: {str(e)}", exc_info=True)
+        raise HTTPException(
+            status_code=500,
+            detail=f"Failed to enqueue scraping job: {str(e)}"
+        )
 
 
 if __name__ == "__main__":
