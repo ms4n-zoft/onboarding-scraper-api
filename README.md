@@ -2,15 +2,6 @@
 
 Production-ready web scraping and analysis engine powered by Azure OpenAI, with async job processing, real-time event streaming, and comprehensive API.
 
-## Features
-
-- 🤖 **AI-Powered Analysis**: Uses Azure OpenAI (GPT-4) for intelligent content extraction
-- 📡 **Real-Time Streaming**: Server-Sent Events (SSE) for live job progress
-- ⚡ **Background Processing**: Redis Queue (RQ) for scalable async job handling
-- 🔄 **Event Persistence**: 24-hour TTL on events and results
-- 📊 **Comprehensive API**: REST endpoints for job submission, status, and results
-- 🛠️ **Production Ready**: Systemd services, Docker support, monitoring, and more
-
 ## Architecture
 
 ```
@@ -220,10 +211,6 @@ Response:
 }
 ```
 
-#### Interactive Documentation
-
-Visit `http://localhost:8000/docs` for Swagger UI documentation or `http://localhost:8000/redoc` for ReDoc documentation.
-
 ### Background Workers (RQ)
 
 For background job processing, you need to run RQ workers separately from the API server.
@@ -331,10 +318,7 @@ python tests/test_worker_manual.py
 ## Documentation
 
 - **[ENVIRONMENT_VARIABLES.md](docs/ENVIRONMENT_VARIABLES.md)** - Complete environment variable reference
-- **[DEPLOYMENT.md](docs/DEPLOYMENT.md)** - Production deployment guide (systemd, Docker, Kubernetes)
-- **[BACKEND_PHASE2_IMPLEMENTATION.md](docs/BACKEND_PHASE2_IMPLEMENTATION.md)** - Technical implementation details
 - **[FRONTEND_API_DOCS.md](docs/FRONTEND_API_DOCS.md)** - API documentation for frontend integration
-- **[PHASE2_COMPLETE.md](docs/PHASE2_COMPLETE.md)** - Phase 2 completion summary
 
 ## Project Structure
 
@@ -378,52 +362,3 @@ product-scraper-engine/
 ├── requirements.txt            # Python dependencies
 └── .env.example                # Environment variable template
 ```
-
-## Troubleshooting
-
-### Common Issues
-
-**"Missing required environment variable: REDIS_URL"**
-
-- Solution: Create a `.env` file with required variables (see `.env.example`)
-
-**Worker not processing jobs**
-
-- Check worker is running: `ps aux | grep worker.py`
-- Verify Redis connection: `python tests/test_worker_setup.py`
-- Check queue: Use RQ dashboard or check logs
-
-**SSE stream not working**
-
-- Ensure worker is running and processing the job
-- Check browser console for connection errors
-- Verify CORS settings if accessing from different origin
-
-**Jobs failing with timeout**
-
-- Increase `job_timeout` in job submission
-- Check Azure OpenAI rate limits
-- Verify network connectivity to Azure OpenAI
-
-### Support
-
-For issues and feature requests, please open an issue on GitHub.
-
-## License
-
-[Your License Here]
-
-## Contributing
-
-Contributions are welcome! Please read our contributing guidelines before submitting PRs.
-
-## Roadmap
-
-- [ ] Add Playwright for JavaScript-heavy sites
-- [ ] Implement rate limiting on API endpoints
-- [ ] Add job priority queues
-- [ ] Support for bulk job submission
-- [ ] Webhook notifications for job completion
-- [ ] Enhanced error recovery and retry logic
-- [ ] Support for custom extraction schemas
-- [ ] Job scheduling and cron-like triggers
