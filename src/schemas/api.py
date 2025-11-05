@@ -35,3 +35,22 @@ class JobStatus(BaseModel):
     enqueued_at: str | None = Field(default=None, description="ISO timestamp when job was enqueued")
     started_at: str | None = Field(default=None, description="ISO timestamp when job started")
     ended_at: str | None = Field(default=None, description="ISO timestamp when job ended")
+
+
+class JobStatusResponse(BaseModel):
+    """Extended response model for job status endpoint."""
+    job_id: str = Field(description="Unique job identifier")
+    status: str = Field(description="Current job status: queued, started, finished, failed, deferred")
+    enqueued_at: str | None = Field(default=None, description="ISO timestamp when job was enqueued")
+    started_at: str | None = Field(default=None, description="ISO timestamp when job started")
+    ended_at: str | None = Field(default=None, description="ISO timestamp when job ended")
+    position: int | None = Field(default=None, description="Position in queue if job is queued")
+    exc_info: str | None = Field(default=None, description="Exception information if job failed")
+
+
+class JobResultResponse(BaseModel):
+    """Response model for job result retrieval."""
+    job_id: str = Field(description="Unique job identifier")
+    status: str = Field(description="Final job status")
+    result: ProductSnapshot | None = Field(default=None, description="Extracted product information")
+    error: str | None = Field(default=None, description="Error message if job failed")

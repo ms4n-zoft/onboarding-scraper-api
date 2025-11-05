@@ -15,8 +15,14 @@ from rq.job import Job as RQJob
 from .main import scrape_and_analyze
 from .schemas.product import ProductSnapshot
 from .schemas.events import CompleteEvent, ErrorEvent
-from .schemas.api import ScrapeRequest, ScrapeResponse, AsyncScrapeResponse
-from .dependencies import get_queue, get_redis_client
+from .schemas.api import (
+    ScrapeRequest, 
+    ScrapeResponse, 
+    AsyncScrapeResponse,
+    JobStatusResponse,
+    JobResultResponse
+)
+from .dependencies import get_queue, get_redis_client, get_rq_redis_client
 from .jobs.scraper_task import scrape_product_job
 
 app = FastAPI(
@@ -209,7 +215,8 @@ async def stream_job_events(job_id: str) -> StreamingResponse:
     async def event_generator() -> AsyncGenerator[str, None]:
         """Generate SSE events from Redis and live updates."""
         try:
-            redis_client = get_redis_client()
+            redis_client = get_redis_client()  # For JSON data
+            rq_redis_client = get_rq_redis_client()  # For RQ operations
             events_key = f"job:{job_id}:events"
             
             # Get all stored events from Redis
@@ -229,7 +236,7 @@ async def stream_job_events(job_id: str) -> StreamingResponse:
             
             # Check job status
             try:
-                rq_job = RQJob.fetch(job_id, connection=redis_client)
+                rq_job = RQJob.fetch(job_id, connection=rq_redis_client)
             except Exception:
                 # Job not found in RQ (might be too old, invalid ID, or completed/expired)
                 # If we have events in Redis, stream them and close
@@ -306,6 +313,151 @@ async def stream_job_events(job_id: str) -> StreamingResponse:
             "X-Accel-Buffering": "no",
         }
     )
+
+
+@app.get("/jobs/{job_id}/status", response_model=JobStatusResponse)
+async def get_job_status(job_id: str) -> JobStatusResponse:
+    """
+    Get the current status of a scraping job.
+    
+    Returns job metadata including status, timestamps, and queue position.
+    """
+    rq_redis_client = get_rq_redis_client()  # Use RQ Redis client (no decode_responses)
+    redis_client = get_redis_client()  # Use JSON Redis client (with decode_responses)
+    
+    try:
+        # Try to fetch job from RQ
+        try:
+            rq_job = RQJob.fetch(job_id, connection=rq_redis_client)
+        except Exception as fetch_error:
+            logger.debug(f"Could not fetch job {job_id} from RQ: {fetch_error}")
+            # Job not found in RQ - check if it has events in Redis (completed/expired)
+            events_key = f"scraper:job:{job_id}:events"
+            has_events = redis_client.exists(events_key)
+            
+            if has_events:
+                # Job completed and expired from RQ but has events
+                logger.info(f"Job {job_id} not in RQ but has events - likely completed and expired")
+                return JobStatusResponse(
+                    job_id=job_id,
+                    status="finished",
+                    enqueued_at=None,
+                    started_at=None,
+                    ended_at=None,
+                )
+            else:
+                # Job truly doesn't exist
+                logger.warning(f"Job {job_id} not found")
+                raise HTTPException(status_code=404, detail=f"Job {job_id} not found")
+        
+        # Build response with job metadata
+        response = JobStatusResponse(
+            job_id=job_id,
+            status=rq_job.get_status(),
+            enqueued_at=rq_job.enqueued_at.isoformat() if rq_job.enqueued_at else None,
+            started_at=rq_job.started_at.isoformat() if rq_job.started_at else None,
+            ended_at=rq_job.ended_at.isoformat() if rq_job.ended_at else None,
+        )
+        
+        # Add queue position if job is queued
+        if rq_job.get_status() == "queued":
+            try:
+                queue = get_queue()
+                position = queue.get_job_position(job_id)
+                response.position = position
+            except Exception as e:
+                logger.warning(f"Could not get queue position for job {job_id}: {e}")
+        
+        # Add exception info if job failed
+        if rq_job.is_failed and rq_job.exc_info:
+            response.exc_info = rq_job.exc_info
+        
+        logger.info(f"✓ Retrieved status for job {job_id}: {response.status}")
+        return response
+        
+    except HTTPException:
+        raise
+    except Exception as e:
+        logger.error(f"Unexpected error getting status for job {job_id}: {str(e)}", exc_info=True)
+        raise HTTPException(status_code=500, detail="Internal server error")
+
+
+@app.get("/jobs/{job_id}/result", response_model=JobResultResponse)
+async def get_job_result(job_id: str) -> JobResultResponse:
+    """
+    Get the result of a completed scraping job.
+    
+    Returns the extracted product information if job is finished successfully.
+    """
+    rq_redis_client = get_rq_redis_client()  # Use RQ Redis client (no decode_responses)
+    redis_client = get_redis_client()  # Use JSON Redis client (with decode_responses)
+    
+    try:
+        # Try to fetch job from RQ
+        rq_job = RQJob.fetch(job_id, connection=rq_redis_client)
+        job_status = rq_job.get_status()
+        
+        # Check if job failed
+        if rq_job.is_failed:
+            logger.error(f"Job {job_id} failed")
+            return JobResultResponse(
+                job_id=job_id,
+                status="failed",
+                result=None,
+                error=rq_job.exc_info if rq_job.exc_info else "Job failed"
+            )
+        
+        # Check if job is finished
+        if not rq_job.is_finished:
+            logger.warning(f"Job {job_id} not finished yet (status: {job_status})")
+            raise HTTPException(
+                status_code=400,
+                detail=f"Job not finished yet. Current status: {job_status}"
+            )
+        
+        # Get result from Redis
+        result_key = f"scraper:job:{job_id}:result"
+        result_json = redis_client.get(result_key)
+        
+        if not result_json:
+            logger.warning(f"Result for job {job_id} has expired or was not stored")
+            raise HTTPException(
+                status_code=404,
+                detail="Job result has expired (24-hour TTL) or was not stored"
+            )
+        
+        # Parse result
+        result_data = json.loads(result_json)
+        product = ProductSnapshot(**result_data)
+        
+        logger.info(f"✓ Retrieved result for job {job_id}")
+        return JobResultResponse(
+            job_id=job_id,
+            status="finished",
+            result=product,
+            error=None
+        )
+        
+    except HTTPException:
+        raise
+    except Exception as e:
+        # Check if job failed
+        try:
+            rq_job = RQJob.fetch(job_id, connection=rq_redis_client)
+            if rq_job.is_failed:
+                logger.error(f"Job {job_id} failed: {rq_job.exc_info}")
+                return JobResultResponse(
+                    job_id=job_id,
+                    status="failed",
+                    result=None,
+                    error=rq_job.exc_info if rq_job.exc_info else "Job failed"
+                )
+        except:
+            pass
+        
+        # Job not found
+        logger.warning(f"Job {job_id} not found: {str(e)}")
+        raise HTTPException(status_code=404, detail=f"Job {job_id} not found")
 
 
 if __name__ == "__main__":
