@@ -125,7 +125,7 @@ async def scrape_product_stream(request: ScrapeRequest) -> StreamingResponse:
 
                 # Send completion event with data
                 complete_event = CompleteEvent(
-                    message="Scraping complete",
+                    message="All done! Your product information is ready",
                     data=product_snapshot.model_dump()
                 )
                 yield f"data: {complete_event.model_dump_json()}\n\n"
