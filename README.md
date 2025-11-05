@@ -1,20 +1,76 @@
-# Product Scraper (Prototype)
+# Product Scraper Engine
 
-Minimal Python prototype for experimenting with agentic scraping backed by Azure OpenAI. Given a starting URL, the script fetches the page, strips boilerplate, and asks an LLM to structure product-related insights.
+Production-ready web scraping and analysis engine powered by Azure OpenAI, with async job processing, real-time event streaming, and comprehensive API.
 
-## Prerequisites
+## Features
+
+- 🤖 **AI-Powered Analysis**: Uses Azure OpenAI (GPT-4) for intelligent content extraction
+- 📡 **Real-Time Streaming**: Server-Sent Events (SSE) for live job progress
+- ⚡ **Background Processing**: Redis Queue (RQ) for scalable async job handling
+- 🔄 **Event Persistence**: 24-hour TTL on events and results
+- 📊 **Comprehensive API**: REST endpoints for job submission, status, and results
+- 🛠️ **Production Ready**: Systemd services, Docker support, monitoring, and more
+
+## Architecture
+
+```
+┌─────────────┐     ┌─────────────┐     ┌─────────────┐
+│   Client    │────▶│  API Server │────▶│    Redis    │
+│  (Browser)  │◀────│  (FastAPI)  │◀────│   (Queue)   │
+└─────────────┘     └─────────────┘     └─────────────┘
+                                              │
+                                              ▼
+                                        ┌─────────────┐
+                                        │ RQ Workers  │
+                                        │  (N nodes)  │
+                                        └─────────────┘
+```
+
+## Quick Start
+
+### Prerequisites
 
 - Python 3.11+
-- Azure OpenAI resource with a model deployment (e.g. `gpt-5-mini`)
+- Redis (Upstash recommended for cloud deployment)
+- Azure OpenAI resource with GPT-4 deployment
 
-## Setup
+### Installation
 
-1. Clone or open this repo. Optionally create a virtual environment.
-2. Install dependencies:
+1. **Clone and setup virtual environment**:
+
+   ```bash
+   git clone https://github.com/your-org/product-scraper-engine.git
+   cd product-scraper-engine
+   python3.11 -m venv venv
+   source venv/bin/activate  # On Windows: venv\Scripts\activate
+   ```
+
+2. **Install dependencies**:
+
    ```bash
    pip install -r requirements.txt
    ```
-3. Configure Azure OpenAI credentials (see `.env.example`). Either export the variables or copy the file to `.env` and fill in values.
+
+3. **Configure environment variables**:
+
+   ```bash
+   cp .env.example .env
+   # Edit .env with your credentials
+   ```
+
+   Required variables:
+
+   - `AZURE_OPENAI_ENDPOINT`
+   - `AZURE_OPENAI_API_KEY`
+   - `AZURE_OPENAI_DEPLOYMENT_NAME`
+   - `REDIS_URL`
+
+   See [ENVIRONMENT_VARIABLES.md](ENVIRONMENT_VARIABLES.md) for complete reference.
+
+4. **Verify setup**:
+   ```bash
+   python tests/test_worker_setup.py
+   ```
 
 ## Usage
 
@@ -239,9 +295,135 @@ rq-dashboard --redis-url your-redis-url
 
 Visit `http://localhost:9181` to see the dashboard.
 
-## Next Steps
+## Testing
 
-- Swap in Playwright for rich DOM capture when simple HTTP fetches are insufficient.
-- Expand the LLM prompt based on desired schema and add validation/guardrails.
-- Orchestrate multiple agent steps (crawl, segment, vision, etc.).
-- Add rate limiting and caching to the API layer.
+### Unit and Integration Tests
+
+```bash
+# Test Redis configuration
+python tests/test_redis.py
+
+# Test event emitter
+python tests/test_redis_event_emitter.py
+
+# Test worker setup
+python tests/test_worker_setup.py
+
+# Test API endpoints
+python tests/test_async_endpoint.py
+python tests/test_stream_endpoint.py
+python tests/test_status_result_endpoints.py
+
+# Integration test (requires worker running)
+python tests/test_integration.py
+```
+
+### Manual Testing
+
+```bash
+# Terminal 1: Start worker
+python worker.py
+
+# Terminal 2: Submit a test job
+python tests/test_worker_manual.py
+```
+
+## Documentation
+
+- **[ENVIRONMENT_VARIABLES.md](docs/ENVIRONMENT_VARIABLES.md)** - Complete environment variable reference
+- **[DEPLOYMENT.md](docs/DEPLOYMENT.md)** - Production deployment guide (systemd, Docker, Kubernetes)
+- **[BACKEND_PHASE2_IMPLEMENTATION.md](docs/BACKEND_PHASE2_IMPLEMENTATION.md)** - Technical implementation details
+- **[FRONTEND_API_DOCS.md](docs/FRONTEND_API_DOCS.md)** - API documentation for frontend integration
+- **[PHASE2_COMPLETE.md](docs/PHASE2_COMPLETE.md)** - Phase 2 completion summary
+
+## Project Structure
+
+```
+product-scraper-engine/
+├── src/
+│   ├── api.py                  # FastAPI application and endpoints
+│   ├── main.py                 # CLI entry point
+│   ├── dependencies.py         # Dependency injection (Redis, Queue)
+│   ├── ai/
+│   │   ├── analyzer.py         # Synchronous AI analyzer
+│   │   └── agentic_analyzer.py # Agentic AI analyzer
+│   ├── config/
+│   │   ├── azure.py            # Azure OpenAI configuration
+│   │   └── redis.py            # Redis connection management
+│   ├── jobs/
+│   │   └── scraper_task.py     # RQ worker job functions
+│   ├── schemas/
+│   │   ├── api.py              # API request/response models
+│   │   ├── events.py           # SSE event models
+│   │   └── product.py          # Product data schemas
+│   ├── scraper/
+│   │   ├── fetcher.py          # HTTP fetching utilities
+│   │   └── parser.py           # HTML parsing utilities
+│   └── utils/
+│       ├── env.py              # Environment variable utilities
+│       ├── event_emitter.py    # Base event emitter
+│       ├── redis_event_emitter.py # Redis-backed event emitter
+│       └── logging.py          # Logging configuration
+├── tests/
+│   ├── test_redis.py           # Redis connection tests
+│   ├── test_redis_event_emitter.py # Event emitter tests
+│   ├── test_rq_job.py          # Job execution tests
+│   ├── test_async_endpoint.py  # Async endpoint tests
+│   ├── test_stream_endpoint.py # SSE streaming tests
+│   ├── test_status_result_endpoints.py # Status/result tests
+│   ├── test_worker_setup.py    # Worker configuration tests
+│   ├── test_worker_manual.py   # Manual worker testing
+│   └── test_integration.py     # End-to-end integration test
+├── worker.py                   # RQ worker entry point
+├── requirements.txt            # Python dependencies
+└── .env.example                # Environment variable template
+```
+
+## Troubleshooting
+
+### Common Issues
+
+**"Missing required environment variable: REDIS_URL"**
+
+- Solution: Create a `.env` file with required variables (see `.env.example`)
+
+**Worker not processing jobs**
+
+- Check worker is running: `ps aux | grep worker.py`
+- Verify Redis connection: `python tests/test_worker_setup.py`
+- Check queue: Use RQ dashboard or check logs
+
+**SSE stream not working**
+
+- Ensure worker is running and processing the job
+- Check browser console for connection errors
+- Verify CORS settings if accessing from different origin
+
+**Jobs failing with timeout**
+
+- Increase `job_timeout` in job submission
+- Check Azure OpenAI rate limits
+- Verify network connectivity to Azure OpenAI
+
+### Support
+
+For issues and feature requests, please open an issue on GitHub.
+
+## License
+
+[Your License Here]
+
+## Contributing
+
+Contributions are welcome! Please read our contributing guidelines before submitting PRs.
+
+## Roadmap
+
+- [ ] Add Playwright for JavaScript-heavy sites
+- [ ] Implement rate limiting on API endpoints
+- [ ] Add job priority queues
+- [ ] Support for bulk job submission
+- [ ] Webhook notifications for job completion
+- [ ] Enhanced error recovery and retry logic
+- [ ] Support for custom extraction schemas
+- [ ] Job scheduling and cron-like triggers

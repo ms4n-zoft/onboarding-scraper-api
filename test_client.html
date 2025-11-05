@@ -1,497 +1,736 @@
 <!DOCTYPE html>
 <html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Product Scraper - Live Demo</title>
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Product Scraper - Async Demo</title>
     <style>
-        * {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
-        }
+      * {
+        margin: 0;
+        padding: 0;
+        box-sizing: border-box;
+      }
 
-        body {
-            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-            min-height: 100vh;
-            padding: 20px;
-        }
+      body {
+        font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto,
+          Oxygen, Ubuntu, Cantarell, sans-serif;
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        min-height: 100vh;
+        padding: 20px;
+      }
 
-        .container {
-            max-width: 900px;
-            margin: 0 auto;
-        }
+      .container {
+        max-width: 900px;
+        margin: 0 auto;
+      }
 
-        .header {
-            text-align: center;
-            color: white;
-            margin-bottom: 30px;
-        }
+      .header {
+        text-align: center;
+        color: white;
+        margin-bottom: 30px;
+      }
 
-        .header h1 {
-            font-size: 2.5rem;
-            margin-bottom: 10px;
-        }
+      .header h1 {
+        font-size: 2.5rem;
+        margin-bottom: 10px;
+      }
 
-        .header p {
-            font-size: 1.1rem;
-            opacity: 0.9;
-        }
+      .header p {
+        font-size: 1.1rem;
+        opacity: 0.9;
+      }
 
-        .card {
-            background: white;
-            border-radius: 12px;
-            padding: 30px;
-            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
-            margin-bottom: 20px;
-        }
+      .badge {
+        display: inline-block;
+        padding: 4px 12px;
+        background: rgba(255, 255, 255, 0.2);
+        border-radius: 12px;
+        font-size: 0.85rem;
+        margin-top: 8px;
+      }
 
-        .input-group {
-            margin-bottom: 20px;
-        }
+      .job-info {
+        background: #f8f9fa;
+        border-radius: 8px;
+        padding: 12px;
+        margin-bottom: 16px;
+        font-size: 0.9rem;
+      }
 
-        .input-group label {
-            display: block;
-            font-weight: 600;
-            margin-bottom: 8px;
-            color: #333;
-        }
+      .job-info-item {
+        display: flex;
+        justify-content: space-between;
+        padding: 4px 0;
+      }
 
-        .input-group input {
-            width: 100%;
-            padding: 12px 16px;
-            border: 2px solid #e0e0e0;
-            border-radius: 8px;
-            font-size: 1rem;
-            transition: border-color 0.3s;
-        }
+      .job-info-label {
+        font-weight: 600;
+        color: #666;
+      }
 
-        .input-group input:focus {
-            outline: none;
-            border-color: #667eea;
-        }
+      .job-info-value {
+        color: #333;
+        font-family: "Courier New", monospace;
+      }
 
-        .btn {
-            width: 100%;
-            padding: 14px;
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-            color: white;
-            border: none;
-            border-radius: 8px;
-            font-size: 1rem;
-            font-weight: 600;
-            cursor: pointer;
-            transition: transform 0.2s, box-shadow 0.2s;
-        }
+      .resume-banner {
+        background: #fff3cd;
+        border-left: 4px solid #ffc107;
+        padding: 16px;
+        border-radius: 8px;
+        margin-bottom: 20px;
+        display: none;
+      }
 
-        .btn:hover:not(:disabled) {
-            transform: translateY(-2px);
-            box-shadow: 0 5px 15px rgba(102, 126, 234, 0.4);
-        }
+      .resume-banner.active {
+        display: block;
+      }
 
-        .btn:disabled {
-            opacity: 0.6;
-            cursor: not-allowed;
-        }
+      .resume-banner-title {
+        font-weight: 600;
+        color: #856404;
+        margin-bottom: 8px;
+      }
 
-        .status-section {
-            display: none;
-        }
+      .resume-banner-actions {
+        display: flex;
+        gap: 12px;
+        margin-top: 12px;
+      }
 
-        .status-section.active {
-            display: block;
-        }
+      .btn-small {
+        padding: 8px 16px;
+        background: #667eea;
+        color: white;
+        border: none;
+        border-radius: 6px;
+        font-size: 0.9rem;
+        font-weight: 600;
+        cursor: pointer;
+        transition: all 0.2s;
+      }
 
-        .status-header {
-            display: flex;
-            align-items: center;
-            gap: 12px;
-            margin-bottom: 20px;
-        }
+      .btn-small:hover {
+        background: #5568d3;
+      }
 
-        .spinner {
-            width: 24px;
-            height: 24px;
-            border: 3px solid #f3f3f3;
-            border-top: 3px solid #667eea;
-            border-radius: 50%;
-            animation: spin 1s linear infinite;
-        }
+      .btn-small.secondary {
+        background: #6c757d;
+      }
 
-        @keyframes spin {
-            0% { transform: rotate(0deg); }
-            100% { transform: rotate(360deg); }
-        }
+      .btn-small.secondary:hover {
+        background: #5a6268;
+      }
 
-        .status-header h3 {
-            color: #333;
-            font-size: 1.2rem;
-        }
+      .card {
+        background: white;
+        border-radius: 12px;
+        padding: 30px;
+        box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
+        margin-bottom: 20px;
+      }
 
-        .events-list {
-            max-height: 400px;
-            overflow-y: auto;
-            background: #f8f9fa;
-            border-radius: 8px;
-            padding: 16px;
-        }
+      .input-group {
+        margin-bottom: 20px;
+      }
 
-        .event-item {
-            padding: 12px 16px;
-            margin-bottom: 10px;
-            border-radius: 6px;
-            animation: slideIn 0.3s ease-out;
-        }
+      .input-group label {
+        display: block;
+        font-weight: 600;
+        margin-bottom: 8px;
+        color: #333;
+      }
 
-        @keyframes slideIn {
-            from {
-                opacity: 0;
-                transform: translateX(-20px);
-            }
-            to {
-                opacity: 1;
-                transform: translateX(0);
-            }
-        }
+      .input-group input {
+        width: 100%;
+        padding: 12px 16px;
+        border: 2px solid #e0e0e0;
+        border-radius: 8px;
+        font-size: 1rem;
+        transition: border-color 0.3s;
+      }
 
-        .event-item.start {
-            background: #e3f2fd;
-            border-left: 4px solid #2196f3;
-        }
+      .input-group input:focus {
+        outline: none;
+        border-color: #667eea;
+      }
 
-        .event-item.reading {
-            background: #fff3e0;
-            border-left: 4px solid #ff9800;
-        }
+      .btn {
+        width: 100%;
+        padding: 14px;
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        color: white;
+        border: none;
+        border-radius: 8px;
+        font-size: 1rem;
+        font-weight: 600;
+        cursor: pointer;
+        transition: transform 0.2s, box-shadow 0.2s;
+      }
 
-        .event-item.update {
-            background: #f3e5f5;
-            border-left: 4px solid #9c27b0;
-        }
+      .btn:hover:not(:disabled) {
+        transform: translateY(-2px);
+        box-shadow: 0 5px 15px rgba(102, 126, 234, 0.4);
+      }
 
-        .event-item.complete {
-            background: #e8f5e9;
-            border-left: 4px solid #4caf50;
-            font-weight: 600;
-        }
+      .btn:disabled {
+        opacity: 0.6;
+        cursor: not-allowed;
+      }
 
-        .event-item.error {
-            background: #ffebee;
-            border-left: 4px solid #f44336;
-        }
+      .status-section {
+        display: none;
+      }
 
-        .event-time {
-            font-size: 0.75rem;
-            color: #666;
-            margin-bottom: 4px;
-        }
+      .status-section.active {
+        display: block;
+      }
 
-        .event-message {
-            color: #333;
-            font-size: 0.95rem;
-        }
+      .status-header {
+        display: flex;
+        align-items: center;
+        gap: 12px;
+        margin-bottom: 20px;
+      }
 
-        .event-url {
-            font-family: 'Courier New', monospace;
-            font-size: 0.85rem;
-            color: #667eea;
-            margin-top: 4px;
-            word-break: break-all;
-        }
+      .spinner {
+        width: 24px;
+        height: 24px;
+        border: 3px solid #f3f3f3;
+        border-top: 3px solid #667eea;
+        border-radius: 50%;
+        animation: spin 1s linear infinite;
+      }
 
-        .result-section {
-            display: none;
+      @keyframes spin {
+        0% {
+          transform: rotate(0deg);
         }
+        100% {
+          transform: rotate(360deg);
+        }
+      }
 
-        .result-section.active {
-            display: block;
-        }
+      .status-header h3 {
+        color: #333;
+        font-size: 1.2rem;
+      }
 
-        .tabs {
-            display: flex;
-            gap: 8px;
-            margin-bottom: 20px;
-            border-bottom: 2px solid #e0e0e0;
-        }
+      .events-list {
+        max-height: 400px;
+        overflow-y: auto;
+        background: #f8f9fa;
+        border-radius: 8px;
+        padding: 16px;
+      }
 
-        .tab {
-            padding: 12px 24px;
-            background: transparent;
-            border: none;
-            border-bottom: 3px solid transparent;
-            cursor: pointer;
-            font-size: 1rem;
-            font-weight: 600;
-            color: #666;
-            transition: all 0.3s;
-        }
+      .event-item {
+        padding: 12px 16px;
+        margin-bottom: 10px;
+        border-radius: 6px;
+        animation: slideIn 0.3s ease-out;
+      }
 
-        .tab:hover {
-            color: #667eea;
+      @keyframes slideIn {
+        from {
+          opacity: 0;
+          transform: translateX(-20px);
         }
+        to {
+          opacity: 1;
+          transform: translateX(0);
+        }
+      }
 
-        .tab.active {
-            color: #667eea;
-            border-bottom-color: #667eea;
-        }
+      .event-item.start {
+        background: #e3f2fd;
+        border-left: 4px solid #2196f3;
+      }
 
-        .tab-content {
-            display: none;
-        }
+      .event-item.reading {
+        background: #fff3e0;
+        border-left: 4px solid #ff9800;
+      }
 
-        .tab-content.active {
-            display: block;
-        }
+      .event-item.update {
+        background: #f3e5f5;
+        border-left: 4px solid #9c27b0;
+      }
 
-        .result-content {
-            background: #f8f9fa;
-            border-radius: 8px;
-            padding: 16px;
-            max-height: 500px;
-            overflow-y: auto;
-        }
+      .event-item.complete {
+        background: #e8f5e9;
+        border-left: 4px solid #4caf50;
+        font-weight: 600;
+      }
 
-        .result-content pre {
-            margin: 0;
-            white-space: pre-wrap;
-            word-wrap: break-word;
-            font-family: 'Courier New', monospace;
-            font-size: 0.9rem;
-            line-height: 1.5;
-        }
+      .event-item.error {
+        background: #ffebee;
+        border-left: 4px solid #f44336;
+      }
 
-        .events-trail {
-            background: #f8f9fa;
-            border-radius: 8px;
-            padding: 16px;
-            max-height: 500px;
-            overflow-y: auto;
-        }
+      .event-time {
+        font-size: 0.75rem;
+        color: #666;
+        margin-bottom: 4px;
+      }
 
-        .error-message {
-            background: #ffebee;
-            color: #c62828;
-            padding: 16px;
-            border-radius: 8px;
-            border-left: 4px solid #f44336;
-            margin-top: 16px;
-        }
+      .event-message {
+        color: #333;
+        font-size: 0.95rem;
+      }
+
+      .event-url {
+        font-family: "Courier New", monospace;
+        font-size: 0.85rem;
+        color: #667eea;
+        margin-top: 4px;
+        word-break: break-all;
+      }
+
+      .result-section {
+        display: none;
+      }
+
+      .result-section.active {
+        display: block;
+      }
+
+      .tabs {
+        display: flex;
+        gap: 8px;
+        margin-bottom: 20px;
+        border-bottom: 2px solid #e0e0e0;
+      }
+
+      .tab {
+        padding: 12px 24px;
+        background: transparent;
+        border: none;
+        border-bottom: 3px solid transparent;
+        cursor: pointer;
+        font-size: 1rem;
+        font-weight: 600;
+        color: #666;
+        transition: all 0.3s;
+      }
+
+      .tab:hover {
+        color: #667eea;
+      }
+
+      .tab.active {
+        color: #667eea;
+        border-bottom-color: #667eea;
+      }
+
+      .tab-content {
+        display: none;
+      }
+
+      .tab-content.active {
+        display: block;
+      }
+
+      .result-content {
+        background: #f8f9fa;
+        border-radius: 8px;
+        padding: 16px;
+        max-height: 500px;
+        overflow-y: auto;
+      }
+
+      .result-content pre {
+        margin: 0;
+        white-space: pre-wrap;
+        word-wrap: break-word;
+        font-family: "Courier New", monospace;
+        font-size: 0.9rem;
+        line-height: 1.5;
+      }
+
+      .events-trail {
+        background: #f8f9fa;
+        border-radius: 8px;
+        padding: 16px;
+        max-height: 500px;
+        overflow-y: auto;
+      }
+
+      .error-message {
+        background: #ffebee;
+        color: #c62828;
+        padding: 16px;
+        border-radius: 8px;
+        border-left: 4px solid #f44336;
+        margin-top: 16px;
+      }
     </style>
-</head>
-<body>
+  </head>
+  <body>
     <div class="container">
-        <div class="header">
-            <h1>Product Scraper Engine</h1>
-            <p>Real-time product intelligence extraction with live updates</p>
+      <div class="header">
+        <h1>Product Scraper Engine</h1>
+        <p>Async job processing with reconnection support</p>
+        <div class="badge">
+          ✓ Resume on refresh | ✓ 24hr persistence | ✓ Event replay
         </div>
+      </div>
 
-        <div class="card">
-            <div class="input-group">
-                <label for="urlInput">Product URL</label>
-                <input
-                    type="url"
-                    id="urlInput"
-                    placeholder="https://example.com/product"
-                    value="https://www.intercom.com"
-                >
-            </div>
-            <button class="btn" id="scrapeBtn" onclick="startScraping()">
-                Start Scraping
-            </button>
+      <div class="card resume-banner" id="resumeBanner">
+        <div class="resume-banner-title">📋 Found existing job in progress</div>
+        <div class="job-info">
+          <div class="job-info-item">
+            <span class="job-info-label">Job ID:</span>
+            <span class="job-info-value" id="resumeJobId">-</span>
+          </div>
+          <div class="job-info-item">
+            <span class="job-info-label">URL:</span>
+            <span class="job-info-value" id="resumeJobUrl">-</span>
+          </div>
+          <div class="job-info-item">
+            <span class="job-info-label">Started:</span>
+            <span class="job-info-value" id="resumeJobTime">-</span>
+          </div>
         </div>
+        <div class="resume-banner-actions">
+          <button class="btn-small" onclick="resumeJob()">Resume Job</button>
+          <button class="btn-small secondary" onclick="clearJob()">
+            Start New Job
+          </button>
+        </div>
+      </div>
 
-        <div class="card status-section" id="statusSection">
-            <div class="status-header">
-                <div class="spinner"></div>
-                <h3>Scraping in progress...</h3>
-            </div>
-            <div class="events-list" id="eventsList"></div>
+      <div class="card">
+        <div class="input-group">
+          <label for="urlInput">Product URL</label>
+          <input
+            type="url"
+            id="urlInput"
+            placeholder="https://example.com/product"
+            value="https://www.intercom.com"
+          />
         </div>
+        <button class="btn" id="scrapeBtn" onclick="startScraping()">
+          Start Scraping
+        </button>
+      </div>
 
-        <div class="card result-section" id="resultSection">
-            <div class="tabs">
-                <button class="tab active" onclick="switchTab('result')">Result</button>
-                <button class="tab" onclick="switchTab('events')">Event Trail</button>
-            </div>
-            <div class="tab-content active" id="resultTab">
-                <div class="result-content">
-                    <pre id="resultContent"></pre>
-                </div>
-            </div>
-            <div class="tab-content" id="eventsTab">
-                <div class="events-trail" id="eventsTrail"></div>
-            </div>
+      <div class="card status-section" id="statusSection">
+        <div class="job-info" id="jobInfo" style="display: none">
+          <div class="job-info-item">
+            <span class="job-info-label">Job ID:</span>
+            <span class="job-info-value" id="currentJobId">-</span>
+          </div>
+          <div class="job-info-item">
+            <span class="job-info-label">Status:</span>
+            <span class="job-info-value" id="currentJobStatus">-</span>
+          </div>
         </div>
+        <div class="status-header">
+          <div class="spinner"></div>
+          <h3>Scraping in progress...</h3>
+        </div>
+        <div class="events-list" id="eventsList"></div>
+      </div>
+
+      <div class="card result-section" id="resultSection">
+        <div class="tabs">
+          <button class="tab active" onclick="switchTab('result')">
+            Result
+          </button>
+          <button class="tab" onclick="switchTab('events')">Event Trail</button>
+        </div>
+        <div class="tab-content active" id="resultTab">
+          <div class="result-content">
+            <pre id="resultContent"></pre>
+          </div>
+        </div>
+        <div class="tab-content" id="eventsTab">
+          <div class="events-trail" id="eventsTrail"></div>
+        </div>
+      </div>
     </div>
 
     <script>
-        let eventSource = null;
+      let eventSource = null;
+      let currentJobId = null;
 
-        function formatTime() {
-            const now = new Date();
-            return now.toLocaleTimeString('en-US', {
-                hour12: false,
-                hour: '2-digit',
-                minute: '2-digit',
-                second: '2-digit'
-            });
+      // Check for existing job on page load
+      window.addEventListener("DOMContentLoaded", function () {
+        checkForExistingJob();
+      });
+
+      function checkForExistingJob() {
+        const jobId = localStorage.getItem("currentJobId");
+        const jobUrl = localStorage.getItem("jobUrl");
+        const jobStartTime = localStorage.getItem("jobStartTime");
+
+        if (jobId && jobStartTime) {
+          const elapsed = Date.now() - parseInt(jobStartTime);
+          const hours = Math.floor(elapsed / (1000 * 60 * 60));
+
+          // Check if job is less than 24 hours old
+          if (hours < 24) {
+            document.getElementById("resumeBanner").classList.add("active");
+            document.getElementById("resumeJobId").textContent = jobId;
+            document.getElementById("resumeJobUrl").textContent =
+              jobUrl || "N/A";
+
+            const startDate = new Date(parseInt(jobStartTime));
+            document.getElementById("resumeJobTime").textContent =
+              startDate.toLocaleString() + ` (${hours}h ago)`;
+          } else {
+            // Job expired
+            clearJobFromStorage();
+          }
+        }
+      }
+
+      function resumeJob() {
+        const jobId = localStorage.getItem("currentJobId");
+        if (jobId) {
+          document.getElementById("resumeBanner").classList.remove("active");
+          connectToJobStream(jobId);
+        }
+      }
+
+      function clearJob() {
+        clearJobFromStorage();
+        document.getElementById("resumeBanner").classList.remove("active");
+      }
+
+      function clearJobFromStorage() {
+        localStorage.removeItem("currentJobId");
+        localStorage.removeItem("jobUrl");
+        localStorage.removeItem("jobStartTime");
+      }
+
+      function formatTime() {
+        const now = new Date();
+        return now.toLocaleTimeString("en-US", {
+          hour12: false,
+          hour: "2-digit",
+          minute: "2-digit",
+          second: "2-digit",
+        });
+      }
+
+      function switchTab(tabName) {
+        // Update tab buttons
+        document.querySelectorAll(".tab").forEach((tab) => {
+          tab.classList.remove("active");
+        });
+        event.target.classList.add("active");
+
+        // Update tab content
+        document.querySelectorAll(".tab-content").forEach((content) => {
+          content.classList.remove("active");
+        });
+        document.getElementById(tabName + "Tab").classList.add("active");
+      }
+
+      function addEvent(event) {
+        const eventsList = document.getElementById("eventsList");
+        const eventItem = document.createElement("div");
+
+        let eventClass = event.event || "update";
+        let message = event.message || "Processing...";
+        let additionalContent = "";
+
+        // Add URL for reading events
+        if (event.event === "reading" && event.url) {
+          additionalContent = `<div class="event-url">${event.url}</div>`;
         }
 
-        function switchTab(tabName) {
-            // Update tab buttons
-            document.querySelectorAll('.tab').forEach(tab => {
-                tab.classList.remove('active');
-            });
-            event.target.classList.add('active');
-
-            // Update tab content
-            document.querySelectorAll('.tab-content').forEach(content => {
-                content.classList.remove('active');
-            });
-            document.getElementById(tabName + 'Tab').classList.add('active');
-        }
-
-        function addEvent(event) {
-            const eventsList = document.getElementById('eventsList');
-            const eventItem = document.createElement('div');
-
-            let eventClass = event.event || 'update';
-            let message = event.message || 'Processing...';
-            let additionalContent = '';
-
-            // Add URL for reading events
-            if (event.event === 'reading' && event.url) {
-                additionalContent = `<div class="event-url">${event.url}</div>`;
-            }
-
-            eventItem.className = `event-item ${eventClass}`;
-            eventItem.innerHTML = `
+        eventItem.className = `event-item ${eventClass}`;
+        eventItem.innerHTML = `
                 <div class="event-time">${formatTime()}</div>
                 <div class="event-message">${message}</div>
                 ${additionalContent}
             `;
 
-            eventsList.appendChild(eventItem);
-            eventsList.scrollTop = eventsList.scrollHeight;
+        eventsList.appendChild(eventItem);
+        eventsList.scrollTop = eventsList.scrollHeight;
+      }
+
+      async function startScraping() {
+        const urlInput = document.getElementById("urlInput");
+        const url = urlInput.value.trim();
+
+        if (!url) {
+          alert("Please enter a valid URL");
+          return;
         }
 
-        function startScraping() {
-            const urlInput = document.getElementById('urlInput');
-            const scrapeBtn = document.getElementById('scrapeBtn');
-            const statusSection = document.getElementById('statusSection');
-            const resultSection = document.getElementById('resultSection');
-            const eventsList = document.getElementById('eventsList');
-            const resultContent = document.getElementById('resultContent');
+        const scrapeBtn = document.getElementById("scrapeBtn");
+        scrapeBtn.disabled = true;
+        scrapeBtn.textContent = "Submitting job...";
 
-            const url = urlInput.value.trim();
+        try {
+          // Submit async job
+          const response = await fetch("http://localhost:8000/scrape/async", {
+            method: "POST",
+            headers: {
+              "Content-Type": "application/json",
+            },
+            body: JSON.stringify({ source_url: url }),
+          });
 
-            if (!url) {
-                alert('Please enter a valid URL');
-                return;
-            }
+          if (!response.ok) {
+            throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+          }
 
-            // Reset UI
-            scrapeBtn.disabled = true;
-            scrapeBtn.textContent = 'Scraping...';
-            statusSection.classList.add('active');
-            resultSection.classList.remove('active');
-            eventsList.innerHTML = '';
-            resultContent.textContent = '';
+          const data = await response.json();
+          const jobId = data.job_id;
 
-            // Close any existing connection
-            if (eventSource) {
-                eventSource.close();
-            }
+          // Store job info in localStorage
+          localStorage.setItem("currentJobId", jobId);
+          localStorage.setItem("jobUrl", url);
+          localStorage.setItem("jobStartTime", Date.now().toString());
 
-            // Start SSE connection
-            const apiUrl = `http://localhost:8000/scrape/stream`;
+          // Hide resume banner if visible
+          document.getElementById("resumeBanner").classList.remove("active");
 
-            fetch(apiUrl, {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                },
-                body: JSON.stringify({ source_url: url })
-            })
-            .then(response => {
-                const reader = response.body.getReader();
-                const decoder = new TextDecoder();
+          // Connect to job stream
+          connectToJobStream(jobId);
+        } catch (error) {
+          console.error("Error submitting job:", error);
+          alert(`Failed to submit job: ${error.message}`);
+          scrapeBtn.disabled = false;
+          scrapeBtn.textContent = "Start Scraping";
+        }
+      }
 
-                function readStream() {
-                    reader.read().then(({ done, value }) => {
-                        if (done) {
-                            scrapeBtn.disabled = false;
-                            scrapeBtn.textContent = 'Start Scraping';
-                            statusSection.classList.remove('active');
-                            return;
-                        }
+      function connectToJobStream(jobId) {
+        const scrapeBtn = document.getElementById("scrapeBtn");
+        const statusSection = document.getElementById("statusSection");
+        const resultSection = document.getElementById("resultSection");
+        const eventsList = document.getElementById("eventsList");
+        const resultContent = document.getElementById("resultContent");
+        const jobInfo = document.getElementById("jobInfo");
 
-                        const chunk = decoder.decode(value, { stream: true });
-                        const lines = chunk.split('\n');
+        // Update UI
+        scrapeBtn.disabled = true;
+        scrapeBtn.textContent = "Job in progress...";
+        statusSection.classList.add("active");
+        resultSection.classList.remove("active");
+        eventsList.innerHTML = "";
+        resultContent.textContent = "";
 
-                        lines.forEach(line => {
-                            if (line.startsWith('data: ')) {
-                                try {
-                                    const eventData = JSON.parse(line.substring(6));
-                                    addEvent(eventData);
+        // Show job info
+        jobInfo.style.display = "block";
+        document.getElementById("currentJobId").textContent = jobId;
+        document.getElementById("currentJobStatus").textContent =
+          "connecting...";
 
-                                    // Handle completion event
-                                    if (eventData.event === 'complete') {
-                                        resultContent.textContent = JSON.stringify(eventData.data, null, 2);
+        currentJobId = jobId;
 
-                                        // Copy events to the trail tab
-                                        const eventsTrail = document.getElementById('eventsTrail');
-                                        eventsTrail.innerHTML = eventsList.innerHTML;
-
-                                        // Hide status section and show result with tabs
-                                        statusSection.classList.remove('active');
-                                        resultSection.classList.add('active');
-
-                                        scrapeBtn.disabled = false;
-                                        scrapeBtn.textContent = 'Start Scraping';
-                                    }
-
-                                    // Handle error event
-                                    if (eventData.event === 'error') {
-                                        // Copy events to the trail tab
-                                        const eventsTrail = document.getElementById('eventsTrail');
-                                        eventsTrail.innerHTML = eventsList.innerHTML;
-
-                                        statusSection.classList.remove('active');
-                                        scrapeBtn.disabled = false;
-                                        scrapeBtn.textContent = 'Start Scraping';
-                                    }
-                                } catch (e) {
-                                    console.error('Failed to parse event:', e);
-                                }
-                            }
-                        });
-
-                        readStream();
-                    });
-                }
-
-                readStream();
-            })
-            .catch(error => {
-                console.error('Error:', error);
-                addEvent({
-                    event: 'error',
-                    message: `Connection error: ${error.message}`
-                });
-                scrapeBtn.disabled = false;
-                scrapeBtn.textContent = 'Start Scraping';
-                statusSection.classList.remove('active');
-            });
+        // Close any existing connection
+        if (eventSource) {
+          eventSource.close();
         }
 
-        // Allow Enter key to submit
-        document.getElementById('urlInput').addEventListener('keypress', function(e) {
-            if (e.key === 'Enter') {
-                startScraping();
+        // Connect to SSE stream
+        const streamUrl = `http://localhost:8000/jobs/${jobId}/stream`;
+        eventSource = new EventSource(streamUrl);
+
+        eventSource.onopen = function () {
+          console.log("SSE connection established");
+          document.getElementById("currentJobStatus").textContent = "connected";
+        };
+
+        eventSource.onmessage = function (e) {
+          try {
+            const eventData = JSON.parse(e.data);
+            console.log("Event received:", eventData);
+
+            addEvent(eventData);
+
+            // Update status
+            if (eventData.event === "start") {
+              document.getElementById("currentJobStatus").textContent =
+                "processing";
             }
+
+            // Handle completion event
+            if (eventData.event === "complete") {
+              document.getElementById("currentJobStatus").textContent =
+                "completed";
+              resultContent.textContent = JSON.stringify(
+                eventData.data,
+                null,
+                2
+              );
+
+              // Copy events to the trail tab
+              const eventsTrail = document.getElementById("eventsTrail");
+              eventsTrail.innerHTML = eventsList.innerHTML;
+
+              // Hide status section and show result with tabs
+              statusSection.classList.remove("active");
+              resultSection.classList.add("active");
+
+              // Clean up
+              eventSource.close();
+              clearJobFromStorage();
+              scrapeBtn.disabled = false;
+              scrapeBtn.textContent = "Start Scraping";
+            }
+
+            // Handle error event
+            if (eventData.event === "error") {
+              document.getElementById("currentJobStatus").textContent =
+                "failed";
+
+              // Copy events to the trail tab
+              const eventsTrail = document.getElementById("eventsTrail");
+              eventsTrail.innerHTML = eventsList.innerHTML;
+
+              // Show error in result tab
+              resultContent.textContent = `Error: ${
+                eventData.error || eventData.message
+              }`;
+
+              statusSection.classList.remove("active");
+              resultSection.classList.add("active");
+
+              // Clean up
+              eventSource.close();
+              clearJobFromStorage();
+              scrapeBtn.disabled = false;
+              scrapeBtn.textContent = "Start Scraping";
+            }
+          } catch (e) {
+            console.error("Failed to parse event:", e);
+          }
+        };
+
+        eventSource.onerror = function (error) {
+          console.error("SSE error:", error);
+          document.getElementById("currentJobStatus").textContent =
+            "connection error";
+
+          addEvent({
+            event: "error",
+            message:
+              "Connection lost. Job may still be processing. Try refreshing to resume.",
+          });
+
+          // Don't clear localStorage - allow resume
+          scrapeBtn.disabled = false;
+          scrapeBtn.textContent = "Start Scraping";
+          eventSource.close();
+        };
+      }
+
+      // Allow Enter key to submit
+      document
+        .getElementById("urlInput")
+        .addEventListener("keypress", function (e) {
+          if (e.key === "Enter") {
+            startScraping();
+          }
         });
     </script>
-</body>
+  </body>
 </html>
