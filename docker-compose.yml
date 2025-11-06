@@ -1,0 +1,78 @@
+version: "3.8"
+
+services:
+  # FastAPI Application Server
+  api:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: scraper-api
+    ports:
+      - "8000:8000"
+    environment:
+      # Azure OpenAI Configuration
+      - AZURE_OPENAI_ENDPOINT=${AZURE_OPENAI_ENDPOINT}
+      - AZURE_OPENAI_API_KEY=${AZURE_OPENAI_API_KEY}
+      - AZURE_OPENAI_DEPLOYMENT_NAME=${AZURE_OPENAI_DEPLOYMENT_NAME}
+      - AZURE_OPENAI_API_VERSION=${AZURE_OPENAI_API_VERSION}
+
+      # Redis Configuration
+      - REDIS_URL=${REDIS_URL}
+
+      # Optional Configuration
+      - LOG_LEVEL=${LOG_LEVEL:-info}
+
+    command: >
+      uvicorn src.api:app
+      --host 0.0.0.0
+      --port 8000
+      --workers 2
+      --log-level info
+
+    restart: unless-stopped
+
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8000/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 40s
+
+    networks:
+      - scraper-network
+
+  # RQ Worker Instances
+  worker:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    environment:
+      # Azure OpenAI Configuration
+      - AZURE_OPENAI_ENDPOINT=${AZURE_OPENAI_ENDPOINT}
+      - AZURE_OPENAI_API_KEY=${AZURE_OPENAI_API_KEY}
+      - AZURE_OPENAI_DEPLOYMENT_NAME=${AZURE_OPENAI_DEPLOYMENT_NAME}
+      - AZURE_OPENAI_API_VERSION=${AZURE_OPENAI_API_VERSION}
+
+      # Redis Configuration
+      - REDIS_URL=${REDIS_URL}
+
+      # Worker Configuration
+      - RQ_WORKER_NAME=worker-${HOSTNAME}
+      - LOG_LEVEL=${LOG_LEVEL:-info}
+
+    command: python worker.py
+
+    restart: unless-stopped
+
+    deploy:
+      replicas: 4
+
+    volumes:
+      - ./logs:/app/logs
+
+    networks:
+      - scraper-network
+
+networks:
+  scraper-network:
+    driver: bridge
