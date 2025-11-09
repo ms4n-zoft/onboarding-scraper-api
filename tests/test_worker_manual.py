@@ -139,6 +139,20 @@ def test_worker_flow():
     logger.info(f"  - Events Received: {event_count}")
     logger.info(f"  - Total Time: {time.time() - start_time:.1f}s")
     logger.info("=" * 80)
+    
+    # Cleanup
+    logger.info("\n🧹 Cleaning up test data...")
+    try:
+        # Delete the job
+        job.delete()
+        # Clean up result and events
+        result_key = f"scraper:job:{job_id}:result"
+        events_key = f"scraper:job:{job_id}:events"
+        redis_client.delete(result_key)
+        redis_client.delete(events_key)
+        logger.success("✓ Test data cleaned up")
+    except Exception as e:
+        logger.warning(f"⚠️  Cleanup warning: {e}")
 
 
 if __name__ == "__main__":

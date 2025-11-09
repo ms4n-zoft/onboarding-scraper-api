@@ -315,6 +315,32 @@ python worker.py
 python tests/test_worker_manual.py
 ```
 
+## Troubleshooting
+
+### Worker Processing Old Jobs on Startup
+
+If the worker starts processing jobs immediately without you submitting any, there are likely old test jobs in your Redis queue.
+
+**Check queue size:**
+
+```bash
+# The worker logs will show: "Queue size: X jobs" on startup
+```
+
+**Clear all queued jobs:**
+
+```bash
+python clear_queue.py
+```
+
+This will:
+
+- Remove all pending jobs from the queue
+- Clear failed jobs
+- Clean up the Redis queue completely
+
+**Note:** Test scripts now include cleanup, but jobs created before this update may remain in Redis until manually cleared.
+
 ## Documentation
 
 - **[ENVIRONMENT_VARIABLES.md](docs/ENVIRONMENT_VARIABLES.md)** - Complete environment variable reference
