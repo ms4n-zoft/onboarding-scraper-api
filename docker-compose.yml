@@ -41,13 +41,13 @@ services:
     build:
       context: .
       dockerfile: Dockerfile
+    hostname: scraper-worker
     environment:
       - AZURE_OPENAI_ENDPOINT=${AZURE_OPENAI_ENDPOINT}
       - AZURE_OPENAI_API_KEY=${AZURE_OPENAI_API_KEY}
       - AZURE_OPENAI_DEPLOYMENT=${AZURE_OPENAI_DEPLOYMENT}
       - AZURE_OPENAI_API_VERSION=${AZURE_OPENAI_API_VERSION}
       - REDIS_URL=${REDIS_URL}
-      - RQ_WORKER_NAME=worker
       - LOG_LEVEL=${LOG_LEVEL:-info}
     command: python worker.py
     mem_limit: "1g"

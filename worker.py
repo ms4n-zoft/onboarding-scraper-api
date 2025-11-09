@@ -12,12 +12,14 @@ Usage:
     
 Environment Variables:
     REDIS_URL: Redis connection URL (required)
-    RQ_WORKER_NAME: Custom worker name (optional, default: hostname)
+    RQ_WORKER_NAME: Custom worker name (optional, default: hostname-timestamp)
     RQ_WORKER_BURST: Run in burst mode - exit after all jobs processed (optional)
 """
 import sys
 import os
 import signal
+import socket
+from datetime import datetime
 from pathlib import Path
 
 # Add project root to Python path
@@ -101,15 +103,16 @@ def main():
     signal.signal(signal.SIGTERM, signal_handler)
     
     # Get worker configuration
-    worker_name = get_env_var("RQ_WORKER_NAME", default=None)
+    # Use hostname + timestamp as default to ensure uniqueness
+    default_worker_name = f"{socket.gethostname()}-{datetime.now().strftime('%Y%m%d-%H%M%S')}"
+    worker_name = get_env_var("RQ_WORKER_NAME", default=default_worker_name)
     burst_mode = get_env_var("RQ_WORKER_BURST", default="false").lower() == "true"
     
     logger.info("=" * 80)
     logger.info("Starting RQ Worker for Product Scraper Engine")
     logger.info("=" * 80)
     
-    if worker_name:
-        logger.info(f"Worker name: {worker_name}")
+    logger.info(f"Worker name: {worker_name}")
     logger.info(f"Burst mode: {burst_mode}")
     logger.info(f"Queue: scraper")
     
