@@ -39,6 +39,39 @@ class SocialLinks(BaseModel):
     )
 
 
+class GCCInfo(BaseModel):
+    offices: Optional[str] = Field(
+        default=None, description="GCC office locations of the product or company"
+    )
+    customers: Optional[str] = Field(
+        default=None, description="Major customers using the product in the Middle East"
+    )
+    local_address: Optional[str] = Field(
+        default=None, description="Local address of the product/company in the GCC region"
+    )
+    arabic_available: Optional[bool] = Field(
+        default=None, description="Indicates if the product is available in Arabic"
+    )
+
+
+class AICapabilityInfo(BaseModel):
+    ai_usage_summary: Optional[str] = Field(
+        default=None, description="Summary of where and how the product uses AI"
+    )
+    ai_technologies_used: Optional[str] = Field(
+        default=None, description="AI technologies used such as GPT, Claude or proprietary models"
+    )
+
+
+class Web3Info(BaseModel):
+    web3_company_status: Optional[str] = Field(
+        default=None, description="Indicates whether the company/product is a Web3 company"
+    )
+    web3_components_list: Optional[str] = Field(
+        default=None, description="Description of Web3 components or blockchain-related features"
+    )
+
+
 class Feature(BaseModel):
     name: str = Field(description="Feature name")
     description: Optional[str] = Field(
@@ -101,6 +134,18 @@ class CompanyInfo(BaseModel):
     community: Optional[str] = Field(
         default=None, description="User communities, forums, and online presence"
     )
+    growth_story: Optional[str] = Field(
+        default=None, description="Narrative describing the company’s growth trajectory"
+    )
+    valuation: Optional[str] = Field(
+        default=None, description="Company valuation if available"
+    )
+    product_expansion: Optional[str] = Field(
+        default=None, description="Details about global or regional expansion of product offerings"
+    )
+    recent_new_features: Optional[str] = Field(
+        default=None, description="Major new features added to the product recently"
+    )
 
 
 class ReviewSummary(BaseModel):
@@ -108,9 +153,15 @@ class ReviewSummary(BaseModel):
         default_factory=list,
         description="Common positive sentiments from review platforms",
     )
+    strengths_paragraph: Optional[str] = Field(
+        default=None, description="Paragraph summary of positive reviews"
+    )
     weaknesses: List[str] = Field(
         default_factory=list,
         description="Repeated concerns or drawbacks from reviews",
+    )
+    weaknesses_paragraph: Optional[str] = Field(
+        default=None, description="Paragraph summary of negative reviews"
     )
     overall_rating: Optional[float] = Field(
         default=None, description="Weighted average rating from major review platforms"
@@ -180,6 +231,9 @@ class ImplementationFAQ(BaseModel):
     additional_costs: Optional[str] = Field(
         default=None, description="Setup fees, maintenance costs, or support charges"
     )
+    cancellation_terms: Optional[str] = Field(
+        default=None, description="Cancellation policy terms from FAQ"
+    )
     contract_renewal_terms: Optional[str] = Field(
         default=None, description="Contract renewal and cancellation terms"
     )
@@ -245,9 +299,15 @@ class ProductSnapshot(BaseModel):
         default=None,
         description="Short product description (1-2 sentences)",
     )
+    short_description_1_2_lines: Optional[str] = Field(
+        default=None, description="One to two line summary of the product"
+    )
     product_description_short: Optional[str] = Field(
         default=None,
         description="SEO-optimized meta description, 120-160 words",
+    )
+    meta_description: Optional[str] = Field(
+        default=None, description="SEO-optimized meta description (120-160 words)"
     )
     overview: Optional[str] = Field(
         default=None,
@@ -288,6 +348,9 @@ class ProductSnapshot(BaseModel):
     industry_size: List[str] = Field(
         default_factory=list,
         description="Industry size segments (e.g., All Segment, SMB, Enterprise)",
+    )
+    industry_size_single: Optional[str] = Field(
+        default=None, description="Primary industry size classification (e.g., SMB, Enterprise)"
     )
     parent_category: Optional[str] = Field(
         default=None, description="Primary software category"
@@ -362,14 +425,27 @@ class ProductSnapshot(BaseModel):
     gcc_availability: Optional[str] = Field(
         default=None, description="GCC region availability and local presence"
     )
+    gcc_info: Optional[GCCInfo] = Field(
+        default=None, description="Structured GCC availability and presence information"
+    )
+    ai_info: Optional[AICapabilityInfo] = Field(
+        default=None, description="Structured AI capability information"
+    )
     gcp_availability: Optional[str] = Field(
         default=None, description="GCP region availability (alternate field, HTML formatted)"
+    )
+    web3_info: Optional[Web3Info] = Field(
+        default=None, description="Structured Web3-related information"
     )
     web3_components: Optional[str] = Field(
         default=None, description="Web3 components or blockchain-related features"
     )
     web3_questions: Optional[str] = Field(
         default=None, description="Web3-related questions and answers (HTML formatted)"
+    )
+
+    technology_stack: List[str] = Field(
+        default_factory=list, description="List of underlying technologies used by the product"
     )
 
     # Media & Visual Information
