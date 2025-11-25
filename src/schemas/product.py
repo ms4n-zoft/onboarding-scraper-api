@@ -113,11 +113,9 @@ class CompanyInfo(BaseModel):
     overview: Optional[str] = Field(
         default=None, description="Company overview and background"
     )
-    founding_story: Optional[str] = Field(
-        default=None, description="Origin story and founding details"
-    )
-    founder_names: List[str] = Field(
-        default_factory=list, description="Names of company founders"
+    founding: Optional[str] = Field(
+        default=None,
+        description="Founding story, key founder names, and early company history",
     )
     funding_info: Optional[str] = Field(
         default=None, description="Investment rounds and major investors"
@@ -125,8 +123,8 @@ class CompanyInfo(BaseModel):
     acquisitions: Optional[str] = Field(
         default=None, description="Major acquisitions and product expansions"
     )
-    global_presence: List[str] = Field(
-        default_factory=list, description="Geographic regions and offices"
+    global_presence: Optional[str] = Field(
+        default=None, description="Global presence details, typically included as part of community and growth narrative",
     )
     company_culture: Optional[str] = Field(
         default=None, description="Company culture, values, and work environment"
@@ -145,6 +143,10 @@ class CompanyInfo(BaseModel):
     )
     recent_new_features: Optional[str] = Field(
         default=None, description="Major new features added to the product recently"
+    )
+    product_offerings: List[str] = Field(
+        default_factory=list,
+        description="List of key product offerings, modules, or SKUs",
     )
 
 
@@ -172,36 +174,11 @@ class ReviewSummary(BaseModel):
     )
 
 
-class RatingsBreakdown(BaseModel):
-    overall_rating: Optional[float] = Field(
-        default=None, description="Overall rating score"
-    )
-    ease_of_use: Optional[float] = Field(
-        default=None, description="Ease of use rating"
-    )
-    breadth_of_features: Optional[float] = Field(
-        default=None, description="Feature breadth rating"
-    )
-    ease_of_implementation: Optional[float] = Field(
-        default=None, description="Implementation ease rating"
-    )
-    value_for_money: Optional[float] = Field(
-        default=None, description="Value for money rating"
-    )
-    customer_support: Optional[float] = Field(
-        default=None, description="Customer support rating"
-    )
-    total_reviews: Optional[int] = Field(
-        default=None, description="Total number of reviews aggregated"
-    )
-
 
 class ImplementationFAQ(BaseModel):
-    implementation_process: Optional[str] = Field(
-        default=None, description="Step-by-step onboarding and implementation process"
-    )
-    implementation_time: Optional[str] = Field(
-        default=None, description="Typical time required for implementation"
+    implementation: Optional[str] = Field(
+        default=None,
+        description="Implementation process and typical time required for onboarding and go-live",
     )
     customization: Optional[str] = Field(
         default=None, description="Customization capabilities and available options"
@@ -212,8 +189,9 @@ class ImplementationFAQ(BaseModel):
     security_measures: Optional[str] = Field(
         default=None, description="Security measures (SSL, encryption, ISO certifications, etc.)"
     )
-    update_frequency: Optional[str] = Field(
-        default=None, description="Product update frequency and management"
+    update: Optional[str] = Field(
+        default=None,
+        description="Recent product updates and typical update frequency or release cadence",
     )
     data_ownership: Optional[str] = Field(
         default=None, description="Data ownership policy and export options"
@@ -239,19 +217,7 @@ class ImplementationFAQ(BaseModel):
     )
 
 
-class MetaKeysInfo(BaseModel):
-    description: Optional[str] = Field(
-        default=None, description="Meta description for SEO"
-    )
-    title: Optional[str] = Field(
-        default=None, description="Meta title for SEO"
-    )
-    h1: Optional[str] = Field(
-        default=None, description="H1 heading text"
-    )
-    header: Optional[str] = Field(
-        default=None, description="Header text"
-    )
+# Note: MetaKeysInfo removed per spec cleanup (not part of official schema)
 
 
 class Integration(BaseModel):
@@ -266,7 +232,7 @@ class Integration(BaseModel):
 
 class PricingInfo(BaseModel):
     overview: Optional[str] = Field(
-        default=None, description="General pricing strategy and overview (200 words)"
+        default=None, description="General pricing strategy and overview (e.g., free trial, freemium, tiered plans)"
     )
     pricing_url: Optional[str] = Field(
         default=None, description="Direct link to pricing page"
@@ -288,49 +254,29 @@ class ProductSnapshot(BaseModel):
         default=None, description="Official product or company website (https://)"
     )
     company_website: Optional[str] = Field(
-        default=None, description="Official company website (https://)"
+        default=None, description="Official parent company website (if different from product website)"
     )
     weburl: Optional[str] = Field(
-        default=None, description="URL slug for the product page"
+        default=None, description="Internal slug for the product page; must use only lowercase letters and hyphens"
     )
 
-    # Product Descriptions
-    description: Optional[str] = Field(
+    # Product Descriptions (as per data team spec)
+    short_description: Optional[str] = Field(
         default=None,
-        description="Short product description (1-2 sentences)",
-    )
-    short_description_1_2_lines: Optional[str] = Field(
-        default=None, description="One to two line summary of the product"
-    )
-    product_description_short: Optional[str] = Field(
-        default=None,
-        description="SEO-optimized meta description, 120-160 words",
-    )
-    meta_description: Optional[str] = Field(
-        default=None, description="SEO-optimized meta description (120-160 words)"
-    )
-    overview: Optional[str] = Field(
-        default=None,
-        description="What the tool does (2-3 paragraphs)",
+        description="Short 1-2 sentence product description for the product details page",
     )
     elevator_pitch: Optional[str] = Field(
         default=None,
-        description="Full overview of product, 500-700 words",
+        description="Full elevator pitch and detailed overview of the product (500-700 words)",
     )
     competitive_advantage: Optional[str] = Field(
         default=None,
-        description="Unique selling proposition and competitive edge (300-500 words)",
-    )
-    usp: Optional[str] = Field(
-        default=None, description="Unique selling proposition summary"
+        description="Competitive edge and how the product differs from alternatives (300-500 words)",
     )
 
     # Company & Founding Information
-    founding_year: Optional[int] = Field(
-        default=None, description="Year product or company was founded"
-    )
     year_founded: Optional[int] = Field(
-        default=None, description="Year company was founded (alternate field)"
+        default=None, description="Year the company or product was founded"
     )
     hq_location: Optional[str] = Field(
         default=None, description="City, Country - headquarters location"
@@ -343,14 +289,7 @@ class ProductSnapshot(BaseModel):
     )
     market_size: Optional[str] = Field(
         default=None,
-        description="Primary market segment (SMB, Mid-Market, Enterprise)",
-    )
-    industry_size: List[str] = Field(
-        default_factory=list,
-        description="Industry size segments (e.g., All Segment, SMB, Enterprise)",
-    )
-    industry_size_single: Optional[str] = Field(
-        default=None, description="Primary industry size classification (e.g., SMB, Enterprise)"
+        description="Primary market segment or company size served (e.g., SMB, Mid-Market, Enterprise)",
     )
     parent_category: Optional[str] = Field(
         default=None, description="Primary software category"
@@ -361,20 +300,16 @@ class ProductSnapshot(BaseModel):
 
     # Contact & Social Information
     contact: ContactInfo = Field(default_factory=ContactInfo)
-    social_links: List[SocialProfile] = Field(default_factory=list)
     social_profiles: Optional[SocialLinks] = Field(
-        default=None, description="Structured social media links"
+        default=None, description="Structured social media links (LinkedIn, Twitter, Facebook)"
     )
 
     # Product Features
     feature_overview: Optional[str] = Field(
-        default=None, description="1-2 line summary of features (200 words)"
+        default=None, description="Short narrative summary of key product features (up to ~200 words)"
     )
     features: List[Feature] = Field(
-        default_factory=list, description="Top 20 key features and capabilities"
-    )
-    other_features: List[str] = Field(
-        default_factory=list, description="Additional feature names/descriptions"
+        default_factory=list, description="Top 20 key product features and capabilities"
     )
     deployment_options: List[DeploymentOption] = Field(
         default_factory=list,
@@ -388,10 +323,7 @@ class ProductSnapshot(BaseModel):
     # Pricing Information
     pricing: PricingInfo = Field(default_factory=PricingInfo)
     pricing_overview: Optional[str] = Field(
-        default=None, description="General pricing strategy overview (200 words)"
-    )
-    pricing_details_web_url: Optional[str] = Field(
-        default=None, description="URL to detailed pricing information"
+        default=None, description="Narrative overview of pricing strategy and structure (around 200 words)"
     )
 
     # FAQ & Implementation Details
@@ -408,9 +340,6 @@ class ProductSnapshot(BaseModel):
     reviews_weakness: List[str] = Field(
         default_factory=list, description="Review weaknesses aggregated from platforms"
     )
-    ratings: Optional[RatingsBreakdown] = Field(
-        default=None, description="Detailed ratings breakdown"
-    )
 
     # Additional Information
     languages_supported: List[str] = Field(
@@ -419,11 +348,8 @@ class ProductSnapshot(BaseModel):
     ai_capabilities: Optional[str] = Field(
         default=None, description="AI capabilities and where AI is used in the product"
     )
-    ai_questions: Optional[str] = Field(
-        default=None, description="AI-related questions and answers (HTML formatted)"
-    )
     gcc_availability: Optional[str] = Field(
-        default=None, description="GCC region availability and local presence"
+        default=None, description="Free-text summary of GCC availability, offices, and local presence"
     )
     gcc_info: Optional[GCCInfo] = Field(
         default=None, description="Structured GCC availability and presence information"
@@ -431,17 +357,11 @@ class ProductSnapshot(BaseModel):
     ai_info: Optional[AICapabilityInfo] = Field(
         default=None, description="Structured AI capability information"
     )
-    gcp_availability: Optional[str] = Field(
-        default=None, description="GCP region availability (alternate field, HTML formatted)"
-    )
     web3_info: Optional[Web3Info] = Field(
         default=None, description="Structured Web3-related information"
     )
     web3_components: Optional[str] = Field(
-        default=None, description="Web3 components or blockchain-related features"
-    )
-    web3_questions: Optional[str] = Field(
-        default=None, description="Web3-related questions and answers (HTML formatted)"
+        default=None, description="Narrative description of any Web3 components or blockchain-related features"
     )
 
     technology_stack: List[str] = Field(
@@ -452,16 +372,8 @@ class ProductSnapshot(BaseModel):
     logo_url: Optional[str] = Field(
         default=None, description="Official company/product logo URL (https://). Scraped from official website or company resources."
     )
-    videos: List[str] = Field(
-        default_factory=list, description="Video URLs (YouTube, Vimeo, etc.)"
-    )
 
     # Integration Information
     integrations: List[Integration] = Field(
         default_factory=list, description="Third-party integrations and partners"
-    )
-
-    # SEO & Metadata
-    meta_keys: Optional[MetaKeysInfo] = Field(
-        default=None, description="SEO metadata (title, description, h1, etc.)"
     )
