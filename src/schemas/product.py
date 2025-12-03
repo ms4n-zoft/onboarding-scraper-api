@@ -9,7 +9,7 @@ from pydantic import BaseModel, Field
 
 class ContactInfo(BaseModel):
     phone_number: Optional[str] = Field(
-        default=None, description="Primary phone number for sales or inquiries"
+        default=None, description="Primary phone number for sales or inquiries, without country code"
     )
     country_code: Optional[str] = Field(
         default=None, description="Country code for phone number (e.g., +1)"
@@ -334,12 +334,6 @@ class ProductSnapshot(BaseModel):
 
     # Reviews & Ratings
     reviews: ReviewSummary = Field(default_factory=ReviewSummary)
-    reviews_strengths: List[str] = Field(
-        default_factory=list, description="Review strengths aggregated from platforms"
-    )
-    reviews_weakness: List[str] = Field(
-        default_factory=list, description="Review weaknesses aggregated from platforms"
-    )
 
     # Additional Information
     languages_supported: List[str] = Field(
