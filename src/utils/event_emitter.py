@@ -9,6 +9,8 @@ from ..schemas.events import (
     StartEvent,
     ReadingEvent,
     UpdateEvent,
+    CompleteEvent,
+    ErrorEvent,
 )
 
 
@@ -45,3 +47,23 @@ class EventEmitter:
         """
         if self.callback:
             self.callback(ReadingEvent(url=url, message=f"Reading {url}"))
+
+    def emit_complete(self, message: str = "All done! Your product information is ready", data: dict | None = None) -> None:
+        """Emit a completion event.
+
+        Args:
+            message: Completion message
+            data: Optional final product data (ProductSnapshot as dict)
+        """
+        if self.callback:
+            self.callback(CompleteEvent(message=message, data=data or {}))
+
+    def emit_error(self, message: str, error: str) -> None:
+        """Emit an error event.
+
+        Args:
+            message: User-friendly error message
+            error: Detailed error information
+        """
+        if self.callback:
+            self.callback(ErrorEvent(message=message, error=error))

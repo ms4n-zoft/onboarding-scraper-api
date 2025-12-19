@@ -8,7 +8,7 @@ from loguru import logger
 
 from ..schemas.product import ProductSnapshot
 from ..utils.event_emitter import EventEmitter
-from .tools.fetcher import fetch_page_text, get_fetch_page_text_tool, fetch_web_content, get_web_fetcher_tool
+from .tools.fetcher import fetch_web_content, get_web_fetcher_tool
 from .tools.search import search_web, get_web_search_tool
 from .utils.tool_handler import ToolHandler, ToolRegistry
 
@@ -59,11 +59,12 @@ INSTRUCTIONS:
 
 16. Return empty lists/nulls only when information truly cannot be found after a focused search.
 
-17. ITERATION BUDGET & COMPLETION TARGET: You have a total of 10 iterations to complete this task. Target 85-95% completion of the ProductSnapshot schema.
+17. ITERATION BUDGET & COMPLETION TARGET: You have a total of 14 iterations to complete this task. Target 85-95% completion of the ProductSnapshot schema.
    - Iteration 1: ALWAYS fetch the initial homepage URL to get content and links
-   - Iterations 2-7: Use fetch_web_content on relevant links from the homepage and other pages. Focus on official website content, not review platforms. Reserve search_web for when you truly need external sources or have exhausted internal links.
-   - Iterations 8-9: Focus on refinement. Target high-priority missing fields with focused searches or fetches. Skip blocked/inaccessible sites.
-   - Iteration 10: Final iteration without tools. Compile your best output based on all collected data.
+   - Iterations 2-9: Use fetch_web_content on relevant links from the homepage and other pages. Focus on official website content, not review platforms. Reserve search_web for when you truly need external sources or have exhausted internal links. Maximize parallel tool calls to explore multiple pages simultaneously.
+   - Iterations 10-12: Focus on refinement and filling critical fields (ai_capabilities, ai_info, gcc_availability, gcc_info). Target high-priority missing fields with focused searches or fetches. Skip blocked/inaccessible sites.
+   - Iteration 13: Final refinement. Fill any remaining high-value fields and verify data accuracy.
+   - Iteration 14: Final iteration without tools. Compile your best output based on all collected data.
 
 18. MAXIMIZE EFFICIENCY WITH PARALLEL TOOL CALLS: To save iterations and gather more information per cycle, call MULTIPLE tools in parallel whenever possible. For example:
    - After fetching the homepage and discovering links, call fetch_web_content on 3-5 relevant pages simultaneously (e.g., /about, /features, /pricing, /contact all at once)
@@ -135,7 +136,7 @@ def extract_product_snapshot_agentic(
             "role": "user",
             "content": (
                 f"TASK: Using the provided homepage URL, thoroughly explore the official website to build a complete, factually accurate ProductSnapshot instance for this product/company. ALWAYS start by fetching the homepage URL first to get both content and links. Then systematically navigate through key pages using the links found (about, features, pricing, integrations, security, documentation, contact). Follow the system instructions carefully, and prefer official sources. If, after reasonable effort, specific information cannot be found, leave those fields null or empty lists as appropriate rather than guessing.\n\n"
-                f"ITERATION BUDGET: You have 10 iterations total to complete this task. Plan your tool usage strategically and efficiently. Target 85-95% completion of the ProductSnapshot schema - prioritize quality and accuracy over completeness. On the final iteration (10/10), you will no longer have access to tools - ensure you provide your best output based on data collected.\n\n"
+                f"ITERATION BUDGET: You have 14 iterations total to complete this task. Plan your tool usage strategically and efficiently. Target 85-95% completion of the ProductSnapshot schema - prioritize quality and accuracy over completeness. On the final iteration (14/14), you will no longer have access to tools - ensure you provide your best output based on data collected.\n\n"
                 f"CONTEXT:\n"
                 f"Official Homepage URL: {initial_url}\n\n"
                 f"CRITICAL REMINDERS:\n"
@@ -146,12 +147,12 @@ def extract_product_snapshot_agentic(
                 f"- Dedicate effort to finding ai_capabilities, ai_info, gcc_availability, and gcc_info fields\n"
                 f"- Always fetch the pricing page (/pricing, /plans) using links from the homepage for complete pricing information\n"
                 f"- Skip review sites if they're blocked - don't waste iterations\n"
-                f"- Focus on efficiency: 10 iterations means each tool call must be purposeful and strategic"
+                f"- Focus on efficiency: 14 iterations means each tool call must be purposeful and strategic"
             )
         }
     ]
     
-    max_iterations = 10
+    max_iterations = 14
     
     for iteration_num in range(max_iterations):
         current_iteration = iteration_num + 1
@@ -187,7 +188,6 @@ def extract_product_snapshot_agentic(
                 snapshot = completion.choices[0].message.parsed
                 if snapshot:
                     logger.info("Successfully extracted ProductSnapshot (forced at max iterations)")
-                    logger.info(f"Final ProductSnapshot: {snapshot.model_dump_json(indent=2)}")
                     emitter.emit_complete()
                     return snapshot
                 else:
@@ -235,7 +235,6 @@ def extract_product_snapshot_agentic(
             snapshot = response.choices[0].message.parsed
             if snapshot:
                 logger.info("Successfully extracted ProductSnapshot")
-                logger.info(f"Final ProductSnapshot: {snapshot.model_dump_json(indent=2)}")
                 emitter.emit_complete()
                 return snapshot
             else:
@@ -243,10 +242,16 @@ def extract_product_snapshot_agentic(
     else:
         # Loop completed without break - should not happen with forced output
         logger.error(f"Failed to generate product snapshot after {max_iterations} iterations")
-        emitter.emit_error(f"Failed to extract after {max_iterations} iterations")
+        emitter.emit_error(
+            message="Failed to extract product information",
+            error=f"Failed to generate product snapshot after {max_iterations} iterations"
+        )
         raise RuntimeError(f"Failed to generate product snapshot after {max_iterations} iterations")
     
     # Reached here only if we broke out due to None response
     logger.error(f"Failed to extract after {max_iterations} iterations - parsed response was None")
-    emitter.emit_error("Failed to extract product snapshot - parsed response was None")
+    emitter.emit_error(
+        message="Failed to extract product information",
+        error="Failed to extract product snapshot - parsed response was None"
+    )
     raise RuntimeError("Failed to extract product snapshot after {max_iterations} iterations")
