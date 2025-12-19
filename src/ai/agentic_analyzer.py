@@ -188,7 +188,7 @@ def extract_product_snapshot_agentic(
                 snapshot = completion.choices[0].message.parsed
                 if snapshot:
                     logger.info("Successfully extracted ProductSnapshot (forced at max iterations)")
-                    emitter.emit_complete()
+                    emitter.emit_complete(data=snapshot.model_dump())
                     return snapshot
                 else:
                     logger.error("Forced response returned None")
@@ -235,7 +235,7 @@ def extract_product_snapshot_agentic(
             snapshot = response.choices[0].message.parsed
             if snapshot:
                 logger.info("Successfully extracted ProductSnapshot")
-                emitter.emit_complete()
+                emitter.emit_complete(data=snapshot.model_dump())
                 return snapshot
             else:
                 break
