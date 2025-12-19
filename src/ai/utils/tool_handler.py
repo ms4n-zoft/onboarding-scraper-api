@@ -27,7 +27,6 @@ class ToolRegistry:
         """Register a tool with its schema and handler function."""
         self._tools[name] = schema
         self._handlers[name] = handler
-        logger.debug(f"Tool registered: {name}", extra={"handler": handler.__name__})
     
     def get_schema(self, name: str) -> Optional[dict]:
         """Get tool schema by name."""
@@ -57,8 +56,6 @@ class ToolHandler:
         name = tool_call.function.name
         call_id = tool_call.id
         
-        logger.debug(f"Executing tool: {name} (call_id: {call_id})")
-        
         handler = self.registry.get_handler(name)
         if not handler:
             logger.warning(f"Unknown tool: {name}")
@@ -71,9 +68,7 @@ class ToolHandler:
         
         try:
             args = json.loads(tool_call.function.arguments)
-            logger.debug(f"Tool arguments: {args}")
             result = handler(**args)
-            logger.info(f"Tool executed successfully: {name}", extra={"call_id": call_id})
             return ToolResult(
                 call_id=call_id,
                 name=name,
@@ -93,7 +88,7 @@ class ToolHandler:
         """Execute multiple tool calls in parallel."""
         import concurrent.futures
         
-        logger.info(f"Executing {len(tool_calls)} tool calls in parallel")
+        logger.info(f"Executing {len(tool_calls)} tool call(s)")
         
         results = []
         with concurrent.futures.ThreadPoolExecutor(max_workers=5) as executor:
@@ -102,7 +97,6 @@ class ToolHandler:
                 results.append(future.result())
         
         sorted_results = sorted(results, key=lambda r: tool_calls.index(next(tc for tc in tool_calls if tc.id == r.call_id)))
-        logger.debug(f"Parallel execution completed: {len(sorted_results)} results", extra={"success_count": sum(1 for r in sorted_results if r.success)})
         return sorted_results
     
     def build_tool_response_messages(self, results: list[ToolResult]) -> list[dict]:
@@ -111,7 +105,6 @@ class ToolHandler:
         Azure OpenAI requires separate messages for each tool result with role='tool'.
         Returns a list of messages to append to the conversation.
         """
-        logger.debug(f"Building response messages for {len(results)} tool results")
         return [
             {
                 "role": "tool",

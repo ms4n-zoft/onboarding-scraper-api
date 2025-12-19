@@ -14,6 +14,8 @@ services:
       - AZURE_OPENAI_API_VERSION=${AZURE_OPENAI_API_VERSION}
       - LLM_MODEL=${LLM_MODEL}
       - REDIS_URL=${REDIS_URL}
+      - TAVILY_API_KEY=${TAVILY_API_KEY}
+      - TAVILY_BACKUP_KEYS=${TAVILY_BACKUP_KEYS}
       - LOG_LEVEL=${LOG_LEVEL:-info}
     command: >
       uvicorn src.api:app
@@ -50,6 +52,8 @@ services:
       - AZURE_OPENAI_API_VERSION=${AZURE_OPENAI_API_VERSION}
       - LLM_MODEL=${LLM_MODEL}
       - REDIS_URL=${REDIS_URL}
+      - TAVILY_API_KEY=${TAVILY_API_KEY}
+      - TAVILY_BACKUP_KEYS=${TAVILY_BACKUP_KEYS}
       - LOG_LEVEL=${LOG_LEVEL:-info}
     command: python worker.py
     mem_limit: "1g"

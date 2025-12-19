@@ -113,7 +113,7 @@ def extract_product_snapshot_agentic(
     tool_handler = ToolHandler(registry)
     
     tools = registry.get_all_schemas()
-    logger.debug(f"Registered {len(tools)} tool(s)")
+    logger.info(f"Registered {len(tools)} tool(s)")
     
     messages = [
         {
@@ -143,8 +143,6 @@ def extract_product_snapshot_agentic(
         current_iteration = iteration_num + 1
         remaining_iterations = max_iterations - current_iteration
         
-        logger.debug(f"Agentic loop iteration {current_iteration}/{max_iterations}")
-        
         # Add iteration context to the user message
         iteration_context = (
             f"\n\n[Iteration {current_iteration}/{max_iterations} - {remaining_iterations} iterations remaining]"
@@ -164,7 +162,7 @@ def extract_product_snapshot_agentic(
         if response.choices[0].message.tool_calls:
             # Check if we're at max iterations before allowing more tool calls
             if current_iteration == max_iterations:
-                logger.warning(f"Reached maximum iterations ({max_iterations}). Forcing final response without tools.")
+                logger.info(f"Reached maximum iterations ({max_iterations}). Forcing final response.")
                 # Force the model to provide final response by removing tools
                 completion = client.beta.chat.completions.parse(
                     model=llm_model,
@@ -175,6 +173,7 @@ def extract_product_snapshot_agentic(
                 snapshot = completion.choices[0].message.parsed
                 if snapshot:
                     logger.info("Successfully extracted ProductSnapshot (forced at max iterations)")
+                    logger.info(f"Final ProductSnapshot: {snapshot.model_dump_json(indent=2)}")
                     emitter.emit_complete()
                     return snapshot
                 else:
@@ -192,8 +191,8 @@ def extract_product_snapshot_agentic(
                         url = args.get("url")
                         if url:
                             emitter.emit_reading(url)
-                    except Exception as e:
-                        logger.warning(f"Failed to parse tool arguments: {e}")
+                    except Exception:
+                        pass
 
             messages.append({
                 "role": "assistant",
@@ -222,10 +221,10 @@ def extract_product_snapshot_agentic(
             snapshot = response.choices[0].message.parsed
             if snapshot:
                 logger.info("Successfully extracted ProductSnapshot")
+                logger.info(f"Final ProductSnapshot: {snapshot.model_dump_json(indent=2)}")
                 emitter.emit_complete()
                 return snapshot
             else:
-                logger.warning("LLM response parsed as None")
                 break
     else:
         # Loop completed without break - should not happen with forced output
