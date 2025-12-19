@@ -344,6 +344,38 @@
         display: block;
       }
 
+      .view-toggle {
+        display: flex;
+        gap: 8px;
+        margin-bottom: 16px;
+        padding: 4px;
+        background: #e9ecef;
+        border-radius: 8px;
+        width: fit-content;
+      }
+
+      .toggle-btn {
+        padding: 8px 16px;
+        background: transparent;
+        border: none;
+        border-radius: 6px;
+        cursor: pointer;
+        font-size: 0.9rem;
+        font-weight: 600;
+        color: #666;
+        transition: all 0.2s;
+      }
+
+      .toggle-btn:hover {
+        color: #333;
+      }
+
+      .toggle-btn.active {
+        background: white;
+        color: #667eea;
+        box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+      }
+
       .result-content {
         background: #f8f9fa;
         border-radius: 8px;
@@ -376,6 +408,290 @@
         border-radius: 8px;
         border-left: 4px solid #f44336;
         margin-top: 16px;
+      }
+
+      /* Rendered View Styles */
+      .product-view {
+        background: white;
+        border-radius: 8px;
+        padding: 0;
+      }
+
+      .product-header {
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        color: white;
+        padding: 24px;
+        border-radius: 8px 8px 0 0;
+      }
+
+      .product-header h2 {
+        font-size: 1.8rem;
+        margin-bottom: 8px;
+      }
+
+      .product-header .company {
+        font-size: 1.1rem;
+        opacity: 0.9;
+        margin-bottom: 4px;
+      }
+
+      .product-header .website-link {
+        color: white;
+        opacity: 0.8;
+        text-decoration: none;
+        font-size: 0.9rem;
+      }
+
+      .product-header .website-link:hover {
+        opacity: 1;
+        text-decoration: underline;
+      }
+
+      .product-section {
+        padding: 20px 24px;
+        border-bottom: 1px solid #e0e0e0;
+      }
+
+      .product-section:last-child {
+        border-bottom: none;
+      }
+
+      .product-section h3 {
+        color: #667eea;
+        font-size: 1.2rem;
+        margin-bottom: 12px;
+        display: flex;
+        align-items: center;
+        gap: 8px;
+      }
+
+      .product-section h4 {
+        color: #333;
+        font-size: 1rem;
+        margin-top: 16px;
+        margin-bottom: 8px;
+      }
+
+      .product-section p {
+        color: #555;
+        line-height: 1.6;
+        margin-bottom: 12px;
+      }
+
+      .info-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+        gap: 12px;
+        margin-bottom: 12px;
+      }
+
+      .info-item {
+        background: #f8f9fa;
+        padding: 12px;
+        border-radius: 6px;
+      }
+
+      .info-label {
+        font-weight: 600;
+        color: #666;
+        font-size: 0.85rem;
+        margin-bottom: 4px;
+      }
+
+      .info-value {
+        color: #333;
+        font-size: 0.95rem;
+      }
+
+      .tag-list {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 8px;
+      }
+
+      .tag {
+        background: #e3f2fd;
+        color: #1976d2;
+        padding: 6px 12px;
+        border-radius: 16px;
+        font-size: 0.85rem;
+        font-weight: 500;
+      }
+
+      .feature-list {
+        display: grid;
+        gap: 8px;
+      }
+
+      .feature-item {
+        background: #f8f9fa;
+        padding: 12px;
+        border-radius: 6px;
+        border-left: 3px solid #667eea;
+      }
+
+      .feature-name {
+        font-weight: 600;
+        color: #333;
+        margin-bottom: 4px;
+      }
+
+      .feature-desc {
+        color: #666;
+        font-size: 0.9rem;
+      }
+
+      .pricing-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+        gap: 16px;
+      }
+
+      .pricing-card {
+        background: white;
+        border: 2px solid #e0e0e0;
+        border-radius: 8px;
+        padding: 20px;
+        transition: all 0.3s;
+      }
+
+      .pricing-card:hover {
+        border-color: #667eea;
+        box-shadow: 0 4px 12px rgba(102, 126, 234, 0.2);
+      }
+
+      .pricing-card.free {
+        border-color: #4caf50;
+      }
+
+      .plan-name {
+        font-size: 1.3rem;
+        font-weight: 700;
+        color: #333;
+        margin-bottom: 8px;
+      }
+
+      .plan-price {
+        font-size: 1.8rem;
+        font-weight: 700;
+        color: #667eea;
+        margin-bottom: 4px;
+      }
+
+      .plan-period {
+        color: #666;
+        font-size: 0.9rem;
+        margin-bottom: 16px;
+      }
+
+      .plan-features {
+        list-style: none;
+      }
+
+      .plan-features li {
+        padding: 6px 0;
+        color: #555;
+        font-size: 0.9rem;
+      }
+
+      .plan-features li:before {
+        content: "✓ ";
+        color: #4caf50;
+        font-weight: bold;
+        margin-right: 8px;
+      }
+
+      .review-summary {
+        background: #f8f9fa;
+        padding: 16px;
+        border-radius: 8px;
+      }
+
+      .rating {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        margin-bottom: 12px;
+      }
+
+      .rating-value {
+        font-size: 2rem;
+        font-weight: 700;
+        color: #667eea;
+      }
+
+      .rating-stars {
+        font-size: 1.5rem;
+        color: #ffc107;
+      }
+
+      .review-list {
+        margin-top: 12px;
+      }
+
+      .review-list h5 {
+        color: #333;
+        font-size: 1rem;
+        margin-bottom: 8px;
+      }
+
+      .review-list ul {
+        list-style-position: inside;
+        color: #555;
+      }
+
+      .review-list li {
+        padding: 4px 0;
+      }
+
+      .social-links {
+        display: flex;
+        gap: 12px;
+      }
+
+      .social-link {
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+        padding: 8px 16px;
+        background: #f8f9fa;
+        border-radius: 6px;
+        color: #667eea;
+        text-decoration: none;
+        font-size: 0.9rem;
+        font-weight: 500;
+        transition: all 0.2s;
+      }
+
+      .social-link:hover {
+        background: #667eea;
+        color: white;
+      }
+
+      .integration-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
+        gap: 12px;
+      }
+
+      .integration-item {
+        background: #f8f9fa;
+        padding: 12px;
+        border-radius: 6px;
+        text-align: center;
+      }
+
+      .integration-name {
+        font-weight: 600;
+        color: #333;
+        font-size: 0.9rem;
+      }
+
+      .empty-state {
+        color: #999;
+        font-style: italic;
+        padding: 12px;
+        text-align: center;
       }
     </style>
   </head>
@@ -469,7 +785,16 @@
           <button class="tab" onclick="switchTab('events')">Event Trail</button>
         </div>
         <div class="tab-content active" id="resultTab">
-          <div class="result-content">
+          <div class="view-toggle">
+            <button class="toggle-btn active" onclick="toggleView('rendered')">
+              📊 Rendered View
+            </button>
+            <button class="toggle-btn" onclick="toggleView('raw')">
+              📝 Raw JSON
+            </button>
+          </div>
+          <div class="result-content" id="renderedView"></div>
+          <div class="result-content" id="rawView" style="display: none">
             <pre id="resultContent"></pre>
           </div>
         </div>
@@ -482,11 +807,454 @@
     <script>
       let eventSource = null;
       let currentJobId = null;
+      let currentResultData = null;
 
       // Check for existing job on page load
       window.addEventListener("DOMContentLoaded", function () {
         checkForExistingJob();
       });
+
+      function toggleView(viewType) {
+        const renderedView = document.getElementById("renderedView");
+        const rawView = document.getElementById("rawView");
+        const toggleBtns = document.querySelectorAll(".toggle-btn");
+
+        toggleBtns.forEach((btn) => btn.classList.remove("active"));
+
+        if (viewType === "rendered") {
+          renderedView.style.display = "block";
+          rawView.style.display = "none";
+          document
+            .querySelector('.toggle-btn[onclick*="rendered"]')
+            .classList.add("active");
+        } else {
+          renderedView.style.display = "none";
+          rawView.style.display = "block";
+          document
+            .querySelector('.toggle-btn[onclick*="raw"]')
+            .classList.add("active");
+        }
+      }
+
+      function renderProductView(data) {
+        const container = document.getElementById("renderedView");
+
+        if (!data) {
+          container.innerHTML =
+            '<div class="empty-state">No data available</div>';
+          return;
+        }
+
+        let html = '<div class="product-view">';
+
+        // Header Section
+        html += '<div class="product-header">';
+        if (data.product_name) {
+          html += `<h2>${escapeHtml(data.product_name)}</h2>`;
+        }
+        if (data.company_name) {
+          html += `<div class="company">${escapeHtml(data.company_name)}</div>`;
+        }
+        if (data.website) {
+          html += `<a href="${escapeHtml(
+            data.website
+          )}" target="_blank" class="website-link">🌐 ${escapeHtml(
+            data.website
+          )}</a>`;
+        }
+        html += "</div>";
+
+        // Short Description
+        if (data.short_description) {
+          html += '<div class="product-section">';
+          html += "<h3>📝 Overview</h3>";
+          html += `<p>${escapeHtml(data.short_description)}</p>`;
+          html += "</div>";
+        }
+
+        // Basic Info Grid
+        html += '<div class="product-section">';
+        html += "<h3>ℹ️ Basic Information</h3>";
+        html += '<div class="info-grid">';
+
+        if (data.year_founded) {
+          html += `<div class="info-item">
+            <div class="info-label">Year Founded</div>
+            <div class="info-value">${data.year_founded}</div>
+          </div>`;
+        }
+
+        if (data.hq_location) {
+          html += `<div class="info-item">
+            <div class="info-label">Headquarters</div>
+            <div class="info-value">${escapeHtml(data.hq_location)}</div>
+          </div>`;
+        }
+
+        if (data.market_size) {
+          html += `<div class="info-item">
+            <div class="info-label">Market Size</div>
+            <div class="info-value">${escapeHtml(data.market_size)}</div>
+          </div>`;
+        }
+
+        if (data.parent_category) {
+          html += `<div class="info-item">
+            <div class="info-label">Category</div>
+            <div class="info-value">${escapeHtml(data.parent_category)}</div>
+          </div>`;
+        }
+
+        html += "</div></div>";
+
+        // Categories and Industries
+        if ((data.industry && data.industry.length > 0) || data.sub_category) {
+          html += '<div class="product-section">';
+          html += "<h3>🏢 Industries & Categories</h3>";
+
+          if (data.industry && data.industry.length > 0) {
+            html += "<h4>Industries</h4>";
+            html += '<div class="tag-list">';
+            data.industry.forEach((ind) => {
+              html += `<span class="tag">${escapeHtml(ind)}</span>`;
+            });
+            html += "</div>";
+          }
+
+          if (data.sub_category) {
+            html += "<h4>Sub-category</h4>";
+            html += `<p>${escapeHtml(data.sub_category)}</p>`;
+          }
+
+          html += "</div>";
+        }
+
+        // Elevator Pitch
+        if (data.elevator_pitch) {
+          html += '<div class="product-section">';
+          html += "<h3>🎯 Product Overview</h3>";
+          html += `<p>${escapeHtml(data.elevator_pitch)}</p>`;
+          html += "</div>";
+        }
+
+        // Competitive Advantage
+        if (data.competitive_advantage) {
+          html += '<div class="product-section">';
+          html += "<h3>⚡ Competitive Advantage</h3>";
+          html += `<p>${escapeHtml(data.competitive_advantage)}</p>`;
+          html += "</div>";
+        }
+
+        // Features
+        if (data.features && data.features.length > 0) {
+          html += '<div class="product-section">';
+          html += "<h3>✨ Key Features</h3>";
+
+          if (data.feature_overview) {
+            html += `<p>${escapeHtml(data.feature_overview)}</p>`;
+          }
+
+          html += '<div class="feature-list">';
+          data.features.slice(0, 20).forEach((feature) => {
+            html += '<div class="feature-item">';
+            html += `<div class="feature-name">${escapeHtml(
+              feature.name
+            )}</div>`;
+            if (feature.description) {
+              html += `<div class="feature-desc">${escapeHtml(
+                feature.description
+              )}</div>`;
+            }
+            html += "</div>";
+          });
+          html += "</div></div>";
+        }
+
+        // Pricing
+        if (
+          data.pricing &&
+          data.pricing.pricing_plans &&
+          data.pricing.pricing_plans.length > 0
+        ) {
+          html += '<div class="product-section">';
+          html += "<h3>💰 Pricing</h3>";
+
+          if (data.pricing.overview || data.pricing_overview) {
+            html += `<p>${escapeHtml(
+              data.pricing.overview || data.pricing_overview
+            )}</p>`;
+          }
+
+          html += '<div class="pricing-grid">';
+          data.pricing.pricing_plans.forEach((plan) => {
+            const isFree = plan.is_free || plan.plan.toLowerCase() === "free";
+            html += `<div class="pricing-card ${isFree ? "free" : ""}">`;
+            html += `<div class="plan-name">${escapeHtml(plan.plan)}</div>`;
+
+            if (plan.amount || plan.is_free) {
+              html += '<div class="plan-price">';
+              if (isFree) {
+                html += "Free";
+              } else {
+                html += `${plan.currency || "$"}${plan.amount || "Contact"}`;
+              }
+              html += "</div>";
+            }
+
+            if (plan.period) {
+              html += `<div class="plan-period">per ${escapeHtml(
+                plan.period
+              )}</div>`;
+            }
+
+            if (plan.description && plan.description.length > 0) {
+              html += '<ul class="plan-features">';
+              plan.description.forEach((feature) => {
+                html += `<li>${escapeHtml(feature)}</li>`;
+              });
+              html += "</ul>";
+            }
+
+            html += "</div>";
+          });
+          html += "</div></div>";
+        }
+
+        // Contact Information
+        if (data.contact) {
+          html += '<div class="product-section">';
+          html += "<h3>📞 Contact Information</h3>";
+          html += '<div class="info-grid">';
+
+          if (data.contact.phone_number) {
+            html += `<div class="info-item">
+              <div class="info-label">Phone</div>
+              <div class="info-value">${
+                data.contact.country_code || ""
+              } ${escapeHtml(data.contact.phone_number)}</div>
+            </div>`;
+          }
+
+          if (data.contact.support_email) {
+            html += `<div class="info-item">
+              <div class="info-label">Email</div>
+              <div class="info-value">${escapeHtml(
+                data.contact.support_email
+              )}</div>
+            </div>`;
+          }
+
+          if (data.contact.address) {
+            html += `<div class="info-item">
+              <div class="info-label">Address</div>
+              <div class="info-value">${escapeHtml(data.contact.address)}</div>
+            </div>`;
+          }
+
+          html += "</div></div>";
+        }
+
+        // Social Links
+        if (data.social_profiles) {
+          html += '<div class="product-section">';
+          html += "<h3>🔗 Social Media</h3>";
+          html += '<div class="social-links">';
+
+          if (data.social_profiles.linkedin) {
+            html += `<a href="${escapeHtml(
+              data.social_profiles.linkedin
+            )}" target="_blank" class="social-link">LinkedIn</a>`;
+          }
+          if (data.social_profiles.twitter) {
+            html += `<a href="${escapeHtml(
+              data.social_profiles.twitter
+            )}" target="_blank" class="social-link">Twitter</a>`;
+          }
+          if (data.social_profiles.facebook) {
+            html += `<a href="${escapeHtml(
+              data.social_profiles.facebook
+            )}" target="_blank" class="social-link">Facebook</a>`;
+          }
+
+          html += "</div></div>";
+        }
+
+        // Reviews
+        if (data.reviews) {
+          html += '<div class="product-section">';
+          html += "<h3>⭐ Reviews</h3>";
+          html += '<div class="review-summary">';
+
+          if (data.reviews.overall_rating) {
+            html += '<div class="rating">';
+            html += `<span class="rating-value">${data.reviews.overall_rating.toFixed(
+              1
+            )}</span>`;
+            html += `<span class="rating-stars">${"★".repeat(
+              Math.round(data.reviews.overall_rating)
+            )}${"☆".repeat(
+              5 - Math.round(data.reviews.overall_rating)
+            )}</span>`;
+            html += "</div>";
+          }
+
+          if (
+            data.reviews.review_sources &&
+            data.reviews.review_sources.length > 0
+          ) {
+            html += '<div class="info-label">Sources</div>';
+            html += '<div class="tag-list">';
+            data.reviews.review_sources.forEach((source) => {
+              html += `<span class="tag">${escapeHtml(source)}</span>`;
+            });
+            html += "</div>";
+          }
+
+          html += '<div class="review-list">';
+
+          if (data.reviews.strengths && data.reviews.strengths.length > 0) {
+            html += "<h5>Strengths</h5>";
+            html += "<ul>";
+            data.reviews.strengths.forEach((strength) => {
+              html += `<li>${escapeHtml(strength)}</li>`;
+            });
+            html += "</ul>";
+          }
+
+          if (data.reviews.weaknesses && data.reviews.weaknesses.length > 0) {
+            html += "<h5>Weaknesses</h5>";
+            html += "<ul>";
+            data.reviews.weaknesses.forEach((weakness) => {
+              html += `<li>${escapeHtml(weakness)}</li>`;
+            });
+            html += "</ul>";
+          }
+
+          html += "</div></div></div>";
+        }
+
+        // Company Info
+        if (data.company_info) {
+          html += '<div class="product-section">';
+          html += "<h3>🏭 Company Information</h3>";
+
+          if (data.company_info.overview) {
+            html += "<h4>Overview</h4>";
+            html += `<p>${escapeHtml(data.company_info.overview)}</p>`;
+          }
+
+          if (data.company_info.founding) {
+            html += "<h4>Founding Story</h4>";
+            html += `<p>${escapeHtml(data.company_info.founding)}</p>`;
+          }
+
+          if (data.company_info.funding_info) {
+            html += "<h4>Funding</h4>";
+            html += `<p>${escapeHtml(data.company_info.funding_info)}</p>`;
+          }
+
+          if (
+            data.company_info.product_offerings &&
+            data.company_info.product_offerings.length > 0
+          ) {
+            html += "<h4>Product Offerings</h4>";
+            html += '<div class="tag-list">';
+            data.company_info.product_offerings.forEach((product) => {
+              html += `<span class="tag">${escapeHtml(product)}</span>`;
+            });
+            html += "</div>";
+          }
+
+          html += "</div>";
+        }
+
+        // AI Capabilities
+        if (data.ai_capabilities || data.ai_info) {
+          html += '<div class="product-section">';
+          html += "<h3>🤖 AI Capabilities</h3>";
+
+          if (data.ai_capabilities) {
+            html += `<p>${escapeHtml(data.ai_capabilities)}</p>`;
+          }
+
+          if (data.ai_info) {
+            if (data.ai_info.ai_usage_summary) {
+              html += "<h4>AI Usage</h4>";
+              html += `<p>${escapeHtml(data.ai_info.ai_usage_summary)}</p>`;
+            }
+            if (data.ai_info.ai_technologies_used) {
+              html += "<h4>Technologies Used</h4>";
+              html += `<p>${escapeHtml(data.ai_info.ai_technologies_used)}</p>`;
+            }
+          }
+
+          html += "</div>";
+        }
+
+        // Integrations
+        if (data.integrations && data.integrations.length > 0) {
+          html += '<div class="product-section">';
+          html += "<h3>🔌 Integrations</h3>";
+          html += '<div class="integration-grid">';
+          data.integrations.slice(0, 12).forEach((integration) => {
+            html += '<div class="integration-item">';
+            html += `<div class="integration-name">${escapeHtml(
+              integration.name
+            )}</div>`;
+            html += "</div>";
+          });
+          html += "</div></div>";
+        }
+
+        // Languages Supported
+        if (data.languages_supported && data.languages_supported.length > 0) {
+          html += '<div class="product-section">';
+          html += "<h3>🌍 Languages Supported</h3>";
+          html += '<div class="tag-list">';
+          data.languages_supported.forEach((lang) => {
+            html += `<span class="tag">${escapeHtml(lang)}</span>`;
+          });
+          html += "</div></div>";
+        }
+
+        // Deployment & Support
+        html += '<div class="product-section">';
+        html += "<h3>🚀 Deployment & Support</h3>";
+        html += '<div class="info-grid">';
+
+        if (data.deployment_options && data.deployment_options.length > 0) {
+          html += '<div class="info-item">';
+          html += '<div class="info-label">Deployment Options</div>';
+          html += '<div class="info-value">';
+          html +=
+            data.deployment_options.map((d) => escapeHtml(d.type)).join(", ") ||
+            "N/A";
+          html += "</div></div>";
+        }
+
+        if (data.support_options && data.support_options.length > 0) {
+          html += '<div class="info-item">';
+          html += '<div class="info-label">Support Channels</div>';
+          html += '<div class="info-value">';
+          html +=
+            data.support_options.map((s) => escapeHtml(s.type)).join(", ") ||
+            "N/A";
+          html += "</div></div>";
+        }
+
+        html += "</div></div>";
+
+        html += "</div>"; // close product-view
+
+        container.innerHTML = html;
+      }
+
+      function escapeHtml(text) {
+        if (text === null || text === undefined) return "";
+        const div = document.createElement("div");
+        div.textContent = text;
+        return div.innerHTML;
+      }
 
       function checkForExistingJob() {
         const jobId = localStorage.getItem("currentJobId");
@@ -718,6 +1486,10 @@
                       2
                     );
 
+                    // Store and render the result data
+                    currentResultData = eventData.data;
+                    renderProductView(currentResultData);
+
                     // Copy events to the trail tab
                     const eventsTrail = document.getElementById("eventsTrail");
                     eventsTrail.innerHTML = eventsList.innerHTML;
@@ -840,6 +1612,10 @@
                 null,
                 2
               );
+
+              // Store and render the result data
+              currentResultData = eventData.data;
+              renderProductView(currentResultData);
 
               // Copy events to the trail tab
               const eventsTrail = document.getElementById("eventsTrail");
