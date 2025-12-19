@@ -146,8 +146,8 @@ def test_worker_flow():
         # Delete the job
         job.delete()
         # Clean up result and events
-        result_key = f"scraper:job:{job_id}:result"
-        events_key = f"scraper:job:{job_id}:events"
+        result_key = f"job:{job_id}:result"
+        events_key = f"job:{job_id}:events"
         redis_client.delete(result_key)
         redis_client.delete(events_key)
         logger.success("✓ Test data cleaned up")

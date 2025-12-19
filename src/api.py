@@ -332,7 +332,7 @@ async def get_job_status(job_id: str) -> JobStatusResponse:
         except Exception as fetch_error:
             logger.debug(f"Could not fetch job {job_id} from RQ: {fetch_error}")
             # Job not found in RQ - check if it has events in Redis (completed/expired)
-            events_key = f"scraper:job:{job_id}:events"
+            events_key = f"job:{job_id}:events"
             has_events = redis_client.exists(events_key)
             
             if has_events:
@@ -416,7 +416,7 @@ async def get_job_result(job_id: str) -> JobResultResponse:
             )
         
         # Get result from Redis
-        result_key = f"scraper:job:{job_id}:result"
+        result_key = f"job:{job_id}:result"
         result_json = redis_client.get(result_key)
         
         if not result_json:
