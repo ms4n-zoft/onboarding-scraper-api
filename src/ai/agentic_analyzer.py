@@ -16,7 +16,7 @@ from .utils.tool_handler import ToolHandler, ToolRegistry
 AGENTIC_SYSTEM_PROMPT = """You are a product intelligence extractor. Extract structured product data from the web to populate a ProductSnapshot. You can use tools (web search and web fetch) to gather additional authoritative evidence. You will be provided with an official homepage URL as your starting point. Your primary responsibility is to thoroughly explore this website and a small set of trusted external sources to fill in the ProductSnapshot schema comprehensively.
 
 INSTRUCTIONS:
-1. Use search_web and fetch_page_text tools strategically to gather information from multiple relevant pages.
+1. Use search_web and fetch_web_content tools strategically to gather information from multiple relevant pages.
 
 2. Start by fetching the provided homepage URL to understand the product/company. Extract the product name, core description, and navigation structure from the homepage.
 
@@ -56,11 +56,11 @@ INSTRUCTIONS:
 15. Return empty lists/nulls only when information truly cannot be found after a focused search.
 
 16. ITERATION BUDGET & COMPLETION TARGET: You have a total of 20 iterations to complete this task. Target 85-95% completion of the ProductSnapshot schema.
-   - Iterations 1-15: Use tools freely (search_web, fetch_page_text) to research thoroughly and gather comprehensive information. Focus on official website content, not review platforms. Dedicate at least 1-2 tool calls to researching AI capabilities and GCC presence.
+   - Iterations 1-15: Use tools freely (search_web, fetch_web_content) to research thoroughly and gather comprehensive information. Focus on official website content, not review platforms. Dedicate at least 1-2 tool calls to researching AI capabilities and GCC presence.
    - Iterations 16-19: Focus on refinement. Target high-priority missing fields with focused searches. Skip blocked/inaccessible sites.
    - Iteration 20: Final iteration without tools. Compile your best output based on all collected data.
 
-17. ERROR HANDLING: If a fetch_page_text call fails (HTTP error, timeout, blocking), do NOT retry the same URL. Move on immediately to other sources. Do not waste iterations on blocked sites.
+17. ERROR HANDLING: If a fetch_web_content call fails (HTTP error, timeout, blocking), do NOT retry the same URL. Move on immediately to other sources. Do not waste iterations on blocked sites.
 
 18. Prioritize quality over quantity - it's better to have 85-95% of fields accurately filled than to fabricate data to reach 100%.
 
@@ -96,11 +96,11 @@ def extract_product_snapshot_agentic(
     # Setup tool registry and handler
     registry = ToolRegistry()
     
-    # Register web fetcher tool (with both old and new names for compatibility)
+    # Register web fetcher tool (use raw schema, registry wraps it)
     registry.register(
-        "fetch_page_text",
-        get_fetch_page_text_tool(),
-        fetch_page_text
+        "fetch_web_content",  # Match the name in the schema
+        get_web_fetcher_tool(),
+        fetch_web_content  # Use the actual function
     )
     
     # Register web search tool
@@ -131,7 +131,7 @@ def extract_product_snapshot_agentic(
                 f"- Dedicate effort to finding ai_capabilities, ai_info, gcc_availability, and gcc_info fields\n"
                 f"- Always fetch the pricing page (/pricing, /plans) for complete pricing information\n"
                 f"- Skip review sites if they're blocked - don't waste iterations\n"
-                f"- Use the fetch_page_text tool to retrieve actual page content\n"
+                f"- Use the fetch_web_content tool to retrieve actual page content\n"
                 f"- Use the search_web tool to find external authoritative sources and supplementary information"
             )
         }
@@ -186,7 +186,7 @@ def extract_product_snapshot_agentic(
 
             # Emit reading events for each page
             for tc in tool_calls:
-                if tc.function.name in ["fetch_page_text", "fetch_web_content"]:
+                if tc.function.name in ["fetch_web_content"]:
                     try:
                         args = json.loads(tc.function.arguments)
                         url = args.get("url")
