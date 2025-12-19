@@ -25,9 +25,9 @@ def scrape_and_analyze(
     Returns:
         JSON string of ProductSnapshot
     """
-    client, deployment = load_azure_openai_client()
+    client, llm_model = load_azure_openai_client()
     result = extract_product_snapshot_agentic(
-        client, deployment, url, event_callback=event_callback
+        client, llm_model, url, event_callback=event_callback
     )
 
     payload = result.model_dump_json(indent=2, ensure_ascii=False)

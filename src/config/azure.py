@@ -13,10 +13,10 @@ DEFAULT_API_VERSION = "2024-02-01"
 
 
 def load_azure_openai_client() -> Tuple[AzureOpenAI, str]:
-    """Load and return a configured Azure OpenAI client with deployment name.
+    """Load and return a configured Azure OpenAI client with LLM model name.
     
     Returns:
-        Tuple of (AzureOpenAI client, deployment name)
+        Tuple of (AzureOpenAI client, LLM model name)
         
     Raises:
         RuntimeError: If required environment variables are missing.
@@ -25,6 +25,7 @@ def load_azure_openai_client() -> Tuple[AzureOpenAI, str]:
     endpoint = get_required_env_var("AZURE_OPENAI_ENDPOINT")
     api_key = get_required_env_var("AZURE_OPENAI_API_KEY")
     deployment = get_required_env_var("AZURE_OPENAI_DEPLOYMENT")
+    llm_model = get_required_env_var("LLM_MODEL")
     api_version = os.getenv("AZURE_OPENAI_API_VERSION", DEFAULT_API_VERSION)
 
     client = AzureOpenAI(
@@ -32,4 +33,4 @@ def load_azure_openai_client() -> Tuple[AzureOpenAI, str]:
         api_key=api_key,
         api_version=api_version,
     )
-    return client, deployment
+    return client, llm_model

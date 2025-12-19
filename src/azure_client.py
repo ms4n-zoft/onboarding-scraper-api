@@ -18,11 +18,12 @@ def _require_env(name: str) -> str:
 
 
 def load_client() -> Tuple[AzureOpenAI, str]:
-    """Return a configured Azure OpenAI client and deployment name."""
+    """Return a configured Azure OpenAI client and LLM model name."""
     load_dotenv()
     endpoint = _require_env("AZURE_OPENAI_ENDPOINT")
     api_key = _require_env("AZURE_OPENAI_API_KEY")
     deployment = _require_env("AZURE_OPENAI_DEPLOYMENT")
+    llm_model = _require_env("LLM_MODEL")
     api_version = os.getenv("AZURE_OPENAI_API_VERSION", DEFAULT_API_VERSION)
 
     client = AzureOpenAI(
@@ -30,4 +31,4 @@ def load_client() -> Tuple[AzureOpenAI, str]:
         api_key=api_key,
         api_version=api_version,
     )
-    return client, deployment
+    return client, llm_model

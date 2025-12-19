@@ -44,13 +44,13 @@ def scrape_product_job(source_url: str) -> dict:
 
     try:
         # Load Azure OpenAI client
-        client, deployment = load_azure_openai_client()
+        client, llm_model = load_azure_openai_client()
 
         # Run scraping with event persistence
         # The agentic analyzer will call emitter callbacks for events
         result = extract_product_snapshot_agentic(
             client,
-            deployment,
+            llm_model,
             source_url,
             event_callback=emitter.emit_event  # Will persist all events to Redis
         )

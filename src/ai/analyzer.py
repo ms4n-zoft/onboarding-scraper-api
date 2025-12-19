@@ -16,7 +16,7 @@ PRODUCT_ANALYSIS_SYSTEM_PROMPT = (
 
 def extract_product_snapshot(
     client: AzureOpenAI,
-    deployment: str,
+    llm_model: str,
     url: str,
     page_text: str,
 ) -> ProductSnapshot:
@@ -24,7 +24,7 @@ def extract_product_snapshot(
     
     Args:
         client: Configured Azure OpenAI client
-        deployment: Model deployment name
+        llm_model: LLM model name
         url: Source URL of the content
         page_text: Cleaned text content from webpage
         
@@ -38,7 +38,7 @@ def extract_product_snapshot(
         f"\n\nURL: {url}\n\nWebpage content:\n{page_text}"
     )
     completion = client.beta.chat.completions.parse(
-        model=deployment,
+        model=llm_model,
         messages=[
             {"role": "system", "content": PRODUCT_ANALYSIS_SYSTEM_PROMPT},
             {"role": "user", "content": user_prompt},

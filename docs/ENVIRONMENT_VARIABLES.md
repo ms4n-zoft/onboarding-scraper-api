@@ -29,6 +29,17 @@ AZURE_OPENAI_API_VERSION=2024-08-01-preview
 REDIS_URL=rediss://default:your-password@your-redis-host.upstash.io:6379
 ```
 
+### Tavily API Configuration
+
+```bash
+# Primary Tavily API key for web search
+TAVILY_API_KEY=tvly-your-primary-api-key-here
+
+# Optional: Comma-separated list of backup API keys for automatic fallback
+# when primary key hits rate limits
+TAVILY_BACKUP_KEYS=tvly-backup-key-1,tvly-backup-key-2,tvly-backup-key-3
+```
+
 ## Optional Variables
 
 ### Worker Configuration
